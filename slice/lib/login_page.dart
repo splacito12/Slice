@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
+import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
-  const LoginPage({Key? key}) : super(key: key);
+  const LoginPage({super.key});
 
   @override
   State<LoginPage> createState() => _LoginPageState();
@@ -19,6 +20,10 @@ class _LoginPageState extends State<LoginPage>{
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/Slice.png', height: 100),
+                ),
                 const SizedBox(height: 12),
                 const Text("Slice",
                   style: TextStyle(fontSize: 28, fontWeight: FontWeight.bold)),
@@ -50,7 +55,7 @@ class _LoginPageState extends State<LoginPage>{
                   onPressed: (){
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const ChatsScreen()),
+                      MaterialPageRoute(builder: (_) => const HomeScreen()),
                     );
                   },
                   child: const Text("Continue"),

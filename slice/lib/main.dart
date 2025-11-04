@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slice/login_page.dart';
 
 void main() {
   runApp(const MyApp());
@@ -9,7 +10,7 @@ class MyApp extends StatelessWidget {
 
   // This widget is the root of your application.
   @override
-  Widget build(BuildContext context) {
+  /*Widget build(BuildContext context) {
     return MaterialApp(
       title: 'Flutter Demo',
       theme: ThemeData(
@@ -31,6 +32,20 @@ class MyApp extends StatelessWidget {
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
       ),
       home: const MyHomePage(title: 'Flutter Demo Home Page'),
+    );
+  }*/
+
+
+  Widget build(BuildContext context){
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        scaffoldBackgroundColor: const Color(0xFFF6FFF6),
+        textTheme: Theme.of(context).textTheme.apply(
+          fontFamily: 'Roboto',
+        ),
+      ),
+      home: const LoginPage(),
     );
   }
 }
