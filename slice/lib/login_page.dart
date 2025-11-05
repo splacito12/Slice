@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slice/register_page.dart';
 import 'home_page.dart';
 
 class LoginPage extends StatefulWidget {
@@ -9,6 +10,8 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage>{
+  final bool obscureText = false;
+
   @override
   Widget build(BuildContext context){
     return Scaffold(
@@ -30,15 +33,18 @@ class _LoginPageState extends State<LoginPage>{
                 const SizedBox(height: 20),
                 const Text("Login",
                   style: TextStyle(fontWeight: FontWeight.bold, fontSize: 18)),
+                  //username
                 const Text("Enter your Username or Email and Password"),
-                const SizedBox(height: 20),
+                const SizedBox(height: 50),
                 const TextField(
+                  obscureText: false,
                   decoration: InputDecoration(
                     hintText: "username or email@domain.com",
                     border: OutlineInputBorder(),
                   ),
                 ),
-                const SizedBox(height: 12),
+                //password
+                const SizedBox(height: 20),
                 const TextField(
                   obscureText: true,
                   decoration: InputDecoration(
@@ -46,6 +52,7 @@ class _LoginPageState extends State<LoginPage>{
                     border: OutlineInputBorder(),
                   ),
                 ),
+                //buttons
                 const SizedBox(height: 20),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
@@ -58,7 +65,7 @@ class _LoginPageState extends State<LoginPage>{
                       MaterialPageRoute(builder: (_) => const HomeScreen()),
                     );
                   },
-                  child: const Text("Continue"),
+                  child: const Text("Login"),
                 ),
                 const SizedBox(height: 16),
                 const Text("or"),
@@ -68,20 +75,14 @@ class _LoginPageState extends State<LoginPage>{
                     backgroundColor: const Color(0xFFFFC0CB),
                     minimumSize: const Size(double.infinity, 48),
                   ),
-                  onPressed: () {},
+                  onPressed: () {
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(builder: (_) => const RegisterPage()),
+                    );
+                  },
                   child: const Text("Sign Up"),
                 ),
-                const SizedBox(height: 16),
-                /*ElevatedButton.icon(
-                  icon: const Icon(Icons.g_mobiledate),
-                  label: const Text("Continue with Google"),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
-                    minimumSize: const Size(double.infinity, 48),
-                  ),
-                  onPressed: () {},
-                ),*/
               ],
             ),
           ),
