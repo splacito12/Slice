@@ -1,8 +1,11 @@
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'login_page.dart'; // make sure this file is in /lib
 import 'signup_page.dart'; // make sure this file is in /lib
 
-void main() {
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp;
   runApp(const SliceApp());
 }
 
