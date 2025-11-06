@@ -23,7 +23,10 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // logo
-                Image.asset('assets/slice_logo.jpeg', height: 100),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/slice_logo.jpeg', height: 100),
+                ),
                 const SizedBox(height: 10),
                 const Text('Slice',
                     style: TextStyle(
@@ -133,7 +136,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {},
-                    icon: Image.asset('slice/assets/google.png', height: 20),
+                    icon: Image.asset('assets/google.png', height: 20),
                     label: const Text('Continue with Google'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF5F5F5),
