@@ -1,11 +1,12 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:video_player/video_player.dart';
-import 'package:slice/widgets/video_bubble.dart';
 import 'dart:io';
+
+
+import 'package:slice/widgets/video_bubble.dart';
+import 'package:slice/services/media_service.dart';
+import 'package:slice/services/message_service.dart';
 
 //this is not the official chats page. need to create one for sharing media
 
@@ -26,9 +27,11 @@ class ChatPage extends StatefulWidget{
 }
 
 class _ChatPageState extends State<ChatPage>{
-  final ImagePicker _imagePicker = ImagePicker();
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
+
+  final MediaService _mediaService = MediaService();
+  final MessageService _messageService = MessageService();
 
   //message
   Future<void> _sendMessage({String? text, File? file, String? mediaType}) async{
@@ -37,49 +40,36 @@ class _ChatPageState extends State<ChatPage>{
     }
 
     //upload our media into the firebase storage
-    String? mediaUrl;
+    String mediaUrl = "";
     if(file != null && mediaType != null){
-      final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.path.split('/').last}';
-      final reference = FirebaseStorage.instance
-        .ref()
-        .child('chat_media/${widget.convoId}/$fileName');
-
-      await reference.putFile(file);
-      mediaUrl = await reference.getDownloadURL();
+      mediaUrl = await _mediaService.uploadMedia(file: file, convoId: widget.convoId);
     }
 
     //message data
-    final messageData = {
-      'senderId': widget.currUserId,
-      'text': text ?? '',
-      'mediaUrl': mediaUrl ?? '',
-      'mediaType': mediaType,
-      'timestamp': FieldValue.serverTimestamp(),
-    };
-
-    await FirebaseFirestore.instance
-      .collection('chats')
-      .doc(widget.convoId)
-      .collection('messages')
-      .add(messageData);
+    await _messageService.messageSend(
+      convoId: widget.convoId,
+     senderId: widget.currUserId,
+     text: text ?? "",
+     mediaType: mediaType,
+     mediaUrl: mediaUrl,
+     );
 
     _textEditingController.clear();
 
     Future.delayed(const Duration(milliseconds: 300), (){
-      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     });
   }
 
   //Pick media function
   Future<void> _pickMedia(bool isImage) async{
-    final pickedMedia = await (isImage ?
-      _imagePicker.pickImage(source: ImageSource.gallery)
-      : _imagePicker.pickVideo(source: ImageSource.gallery));
+    File? file = await _mediaService.pickMedia(isImage);
 
-    if(pickedMedia != null){
-      final file = File(pickedMedia.path);
-      _sendMessage(file:file, mediaType: isImage ? 'image' : 'video');
+    if(file == null){
+      return;
     }
+
+    await _sendMessage(file: file, mediaType: isImage ? "image" : "video",);
   }
 
   //here will go all the design of the chat page
@@ -95,8 +85,15 @@ class _ChatPageState extends State<ChatPage>{
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
-          title: Text(widget.chatPartnerId),
+          title: Text(
+            widget.chatPartnerId,
+            style: const TextStyle(color: Colors.white),
+            ),
+
           backgroundColor: Colors.green[700],
+          leading: IconButton(onPressed: () => Navigator.pop(context), //takes us to the previous page 
+          icon: const Icon( Icons.arrow_back, color: Colors.white,),
+          ),
         ),
 
         body: Column(
@@ -119,10 +116,10 @@ class _ChatPageState extends State<ChatPage>{
                       final isMe = msg['senderId'] == widget.currUserId;
 
                       //Imported text bubbles
-                      if(msg['mediaType'] == ""){
+                      if(msg['mediaType'] == "" || msg['mediaType'] == null){
                         return BubbleSpecialOne(
                           isSender: isMe,
-                          text: msg['text'],
+                          text: msg['text'] ?? "",
                           color: isMe ? const Color(0xFFD0F6C1) : const Color(0xFFFFD8DF),
                           textStyle: const TextStyle(fontSize: 16),
                         );
@@ -142,9 +139,12 @@ class _ChatPageState extends State<ChatPage>{
                         );
                       }
 
-                      // TODO: video bubble
+                      //video bubble
                       if(msg['mediaType'] == "video"){
-
+                        return VideoBubble(
+                          videoUrl: msg['mediaUrl'], 
+                          isSender: isMe,
+                          );
                       }
 
                       return const SizedBox.shrink();
@@ -154,21 +154,25 @@ class _ChatPageState extends State<ChatPage>{
               ),
             ),
 
-            //The text bar
-            MessageBar(
-              onSend: (text) => _sendMessage(text: text),
-              actions: [
-                IconButton(
-                  icon: const Icon(Icons.image, color: Colors.grey),
-                  onPressed: () => _pickMedia(true),
-                ),
+            //The message bar
+            ClipRRect(
+              borderRadius: BorderRadiusGeometry.circular(20),
+              child: MessageBar(
+                onSend: (text) => _sendMessage(text: text),
+                messageBarHintText: "Type a message...",
+                actions: [
+                  IconButton(
+                    icon: const Icon(Icons.image, color: Colors.grey),
+                    onPressed: () => _pickMedia(true),
+                  ),
 
-                IconButton(
-                  icon: const Icon(Icons.video_library, color: Colors.grey),
-                  onPressed: () => _pickMedia(false),
+                  IconButton(
+                    icon: const Icon(Icons.video_library, color: Colors.grey),
+                    onPressed: () => _pickMedia(false),
+                  ),
+                ],
                 ),
-              ],
-            ),
+              ),
           ],
         ),
       );
