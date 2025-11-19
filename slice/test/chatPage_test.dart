@@ -38,6 +38,7 @@ void main(){
       makeTestable(ChatPage(
         convoId: "testConvo123", 
         currUserId: "me", 
+        currUserName: "Me",
         chatPartnerId: "testPartner",
         mediaService: mockMediaService,
         messageService: mockMessageService,
@@ -77,6 +78,7 @@ void main(){
       makeTestable(ChatPage(
         convoId: "fakeConvo123", 
         currUserId: "me", 
+        currUserName: "Me",
         chatPartnerId: "fakePartner",
         mediaService: mockMediaService,
         messageService: mockMessageService,
@@ -110,6 +112,7 @@ void main(){
       makeTestable(ChatPage(
         convoId: "fakeConvo123", 
         currUserId: "me", 
+        currUserName: "Me",
         chatPartnerId: "fakePartner",
         mediaService: mockMediaService,
         messageService: mockMessageService,
@@ -131,5 +134,59 @@ void main(){
       mediaUrl: anyNamed("mediaUrl"),
       mediaType: anyNamed("mediaType"),
       ));
+  });
+
+  //test whether the group chat shows the sender names and the name
+  testWidgets("Group Chat shows sender names and group name", (tester)async{
+    await fakeFirebaseFirestore
+      .collection('chats')
+      .doc("groupChat123")
+      .collection('messages')
+      .add({
+        'senderId': 'testUser',
+        'senderName': 'Bob',
+        'text': 'Hello everyone',
+        'mediaType': '',
+        'mediaUrl': '',
+        'timestamp': DateTime.now().millisecondsSinceEpoch,
+      });
+
+      //message from the current user
+      await fakeFirebaseFirestore
+        .collection('chats')
+        .doc("groupChat123")
+        .collection('messages')
+        .add({
+          'senderId': 'me',
+          'senderName': 'Me',
+          'text': 'Hello Bob!',
+          'mediaType': '',
+          'mediaUrl': '',
+          'timestamp': DateTime.now().millisecondsSinceEpoch + 1,
+        });
+
+        await tester.pumpWidget(
+          MaterialApp(
+            home: ChatPage(
+              convoId: "groupChat123",
+              currUserId: "me",
+              currUserName: "Me",
+              isGroupChat: true,
+              groupName: "Our GC",
+              mediaService: mockMediaService,
+              messageService: mockMessageService,
+              firestore: fakeFirebaseFirestore,
+              ),
+          ),
+        );
+
+        await tester.pumpAndSettle();
+
+        //assertions
+        expect(find.text("Our GC"), findsOneWidget);
+        expect(find.text("Bob"), findsOneWidget);
+        expect(find.text("Me"), findsNothing);
+        expect(find.text("Hello everyone"), findsOneWidget);
+        expect(find.text("Hi Bob!"), findsOneWidget);
   });
 }
