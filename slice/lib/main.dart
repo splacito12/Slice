@@ -5,6 +5,9 @@ import 'package:slice/views/pages/home_page.dart';
 import 'firebase_options.dart';
 import 'views/widget_tree.dart';
 import 'package:slice/login_page.dart';
+import 'package:slice/firebase_msg.dart';
+import 'login_page.dart'; // make sure this file is in /lib
+import 'signup_page.dart'; // make sure this file is in /lib
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
