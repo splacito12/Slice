@@ -77,6 +77,7 @@ class MockMessageService extends _i1.Mock implements _i6.MessageService {
   _i3.Future<void> messageSend({
     required String? convoId,
     required String? senderId,
+    required String? senderName,
     String? text = '',
     String? mediaUrl = '',
     String? mediaType,
@@ -85,6 +86,7 @@ class MockMessageService extends _i1.Mock implements _i6.MessageService {
             Invocation.method(#messageSend, [], {
               #convoId: convoId,
               #senderId: senderId,
+              #senderName: senderName,
               #text: text,
               #mediaUrl: mediaUrl,
               #mediaType: mediaType,

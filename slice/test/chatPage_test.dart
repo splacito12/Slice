@@ -61,6 +61,7 @@ void main(){
     verify(mockMessageService.messageSend(
       convoId: "testConvo123",
       senderId: "me",
+      senderName: "Me",
       text: "nice to meet you",
       mediaType: null,
       mediaUrl: "",
@@ -98,6 +99,7 @@ void main(){
     verify(mockMessageService.messageSend(
       convoId: "fakeConvo123", 
       senderId: "me",
+      senderName: "Me",
       text: "",
       mediaUrl: "fake_url",
       mediaType: "image",
@@ -130,6 +132,7 @@ void main(){
     verifyNever(mockMessageService.messageSend(
       convoId: anyNamed("convoId"), 
       senderId: anyNamed("senderId"),
+      senderName: anyNamed("senderName"),
       text: anyNamed("text"),
       mediaUrl: anyNamed("mediaUrl"),
       mediaType: anyNamed("mediaType"),
@@ -187,6 +190,6 @@ void main(){
         expect(find.text("Bob"), findsOneWidget);
         expect(find.text("Me"), findsNothing);
         expect(find.text("Hello everyone"), findsOneWidget);
-        expect(find.text("Hi Bob!"), findsOneWidget);
+        expect(find.text("Hello Bob!"), findsOneWidget);
   });
 }
