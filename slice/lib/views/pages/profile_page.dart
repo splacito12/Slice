@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:slice/services/auth/auth_service.dart';
+import 'package:slice/data/notifiers.dart';
 
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
@@ -30,6 +31,7 @@ class ProfilePage extends StatelessWidget {
                   onPressed: () {
                     debugPrint('LOGOUT');
                     logOut();
+                    currentPageNotifier = ValueNotifier(0);
                   },
                   child: Text('Logout'),
                 ),
