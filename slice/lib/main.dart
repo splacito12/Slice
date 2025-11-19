@@ -26,6 +26,11 @@ class Slice extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
+        useMaterial3: true,
+        scaffoldBackgroundColor: const Color(0xFFF2FFF2),
+      ),
       home: const AuthGate(),
     );
   }
