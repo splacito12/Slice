@@ -5,6 +5,10 @@ import 'package:slice/views/pages/home_page.dart';
 import 'firebase_options.dart';
 import 'views/widget_tree.dart';
 import 'package:slice/login_page.dart';
+import 'package:slice/firebase_msg.dart';
+import 'login_page.dart'; // make sure this file is in /lib
+import 'signup_page.dart'; // make sure this file is in /lib
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -21,6 +25,9 @@ class Slice extends StatelessWidget {
   // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      FirebaseMsg().initFCM();
+    });
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: const AuthGate(),
