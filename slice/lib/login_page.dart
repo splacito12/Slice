@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slice/services/auth/auth_service.dart';
 import 'signup_page.dart'; // so we can navigate to your existing sign-up screen
 
 class LoginPage extends StatefulWidget {
@@ -12,6 +13,19 @@ class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
+  void login() async {
+    // authentication service
+    final authService = AuthService();
+
+    try {
+      await authService.signInWithEmailPassword(_emailController.text, _passwordController.text);
+    }
+    catch (e) {
+      debugPrint(e.toString());
+    }
+
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -23,7 +37,10 @@ class _LoginPageState extends State<LoginPage> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 // logo
-                Image.asset('assets/slice_logo.jpeg', height: 100),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/slice_logo.jpeg', height: 100),
+                ),
                 const SizedBox(height: 10),
                 const Text('Slice',
                     style: TextStyle(
@@ -80,6 +97,7 @@ class _LoginPageState extends State<LoginPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       debugPrint('Login: ${_emailController.text}');
+                      login();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
@@ -133,7 +151,7 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: ElevatedButton.icon(
                     onPressed: () {},
-                    icon: Image.asset('slice/assets/google.png', height: 20),
+                    icon: Image.asset('assets/google.png', height: 20),
                     label: const Text('Continue with Google'),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFF5F5F5),

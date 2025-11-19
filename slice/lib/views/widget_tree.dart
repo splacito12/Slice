@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:slice/data/notifiers.dart';
+import 'package:slice/login_page.dart';
 import 'package:slice/views/pages/addfriend_page.dart';
 import 'package:slice/views/pages/creategroup_page.dart';
 import 'package:slice/views/pages/home_page.dart';
