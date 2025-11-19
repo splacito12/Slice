@@ -14,8 +14,10 @@ class ChatPage extends StatefulWidget{
   final String convoId;
   final String currUserId;
   final String chatPartnerId;
+
   final MediaService? mediaService;
   final MessageService? messageService;
+  final FirebaseFirestore? firestore;
 
   const ChatPage({
     super.key,
@@ -24,6 +26,7 @@ class ChatPage extends StatefulWidget{
     required this.chatPartnerId,
     this.mediaService,
     this.messageService,
+    this.firestore,
   });
 
   @override
@@ -36,6 +39,7 @@ class _ChatPageState extends State<ChatPage>{
 
   late MediaService _mediaService;
   late MessageService _messageService;
+  late FirebaseFirestore _firebaseFirestore;
 
   //initstate so that its easier to use mock tests
   @override
@@ -43,6 +47,7 @@ class _ChatPageState extends State<ChatPage>{
     super.initState();
     _mediaService = widget.mediaService ?? MediaService();
     _messageService = widget.messageService ?? MessageService();
+    _firebaseFirestore = widget.firestore ?? FirebaseFirestore.instance;
   }
 
   //message
@@ -87,7 +92,7 @@ class _ChatPageState extends State<ChatPage>{
   //here will go all the design of the chat page
   @override
   Widget build(BuildContext context){
-    final messageRef = FirebaseFirestore.instance
+    final messageRef = (widget.firestore ?? FirebaseFirestore.instance)
       .collection('chats')
       .doc(widget.convoId)
       .collection('messages')
