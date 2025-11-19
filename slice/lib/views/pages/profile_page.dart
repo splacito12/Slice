@@ -11,7 +11,6 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // return Center(child: Text('Profile Page'),);
     return Scaffold(
       body: Center(
         child: Column(
