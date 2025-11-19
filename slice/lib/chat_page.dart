@@ -14,12 +14,16 @@ class ChatPage extends StatefulWidget{
   final String convoId;
   final String currUserId;
   final String chatPartnerId;
+  final MediaService? mediaService;
+  final MessageService? messageService;
 
   const ChatPage({
     super.key,
     required this.convoId,
     required this.currUserId,
     required this.chatPartnerId,
+    this.mediaService,
+    this.messageService,
   });
 
   @override
@@ -30,8 +34,16 @@ class _ChatPageState extends State<ChatPage>{
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
 
-  final MediaService _mediaService = MediaService();
-  final MessageService _messageService = MessageService();
+  late MediaService _mediaService;
+  late MessageService _messageService;
+
+  //initstate so that its easier to use mock tests
+  @override
+  void initState(){
+    super.initState();
+    _mediaService = widget.mediaService ?? MediaService();
+    _messageService = widget.messageService ?? MessageService();
+  }
 
   //message
   Future<void> _sendMessage({String? text, File? file, String? mediaType}) async{
