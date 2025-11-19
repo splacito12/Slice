@@ -12,7 +12,7 @@ import 'signup_page.dart'; // make sure this file is in /lib
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
     await Firebase.initializeApp(
-      name: "slice-32bc8",
+      // name: "slice-32bc8",
       options: DefaultFirebaseOptions.currentPlatform,
   );
   runApp(const Slice());
