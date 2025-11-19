@@ -13,7 +13,12 @@ import 'package:slice/services/message_service.dart';
 class ChatPage extends StatefulWidget{
   final String convoId;
   final String currUserId;
-  final String chatPartnerId;
+  final String currUserName;
+  final String? chatPartnerId; //for 1-1
+  final bool isGroupChat; //for group chats
+  final String? groupName;
+  final List<String>? chatMembers;
+
 
   final MediaService? mediaService;
   final MessageService? messageService;
@@ -23,7 +28,11 @@ class ChatPage extends StatefulWidget{
     super.key,
     required this.convoId,
     required this.currUserId,
-    required this.chatPartnerId,
+    required this.currUserName,
+    this.chatPartnerId,
+    this.isGroupChat = false,
+    this.groupName,
+    this.chatMembers,
     this.mediaService,
     this.messageService,
     this.firestore,
@@ -66,6 +75,7 @@ class _ChatPageState extends State<ChatPage>{
     await _messageService.messageSend(
       convoId: widget.convoId,
      senderId: widget.currUserId,
+     senderName: widget.currUserName,
      text: text ?? "",
      mediaType: mediaType,
      mediaUrl: mediaUrl,
@@ -98,12 +108,16 @@ class _ChatPageState extends State<ChatPage>{
       .collection('messages')
       .orderBy('timestamp', descending: false);
 
+      //for group chats
+      final String appBarTitle = widget.isGroupChat ?
+        (widget.groupName ?? "Group Chat") : (widget.chatPartnerId ?? "Chat");
+
       //design
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
           title: Text(
-            widget.chatPartnerId,
+            appBarTitle,
             style: const TextStyle(color: Colors.white),
             ),
 
@@ -132,9 +146,27 @@ class _ChatPageState extends State<ChatPage>{
                       final msg = docs[index].data() as Map<String, dynamic>;
                       final isMe = msg['senderId'] == widget.currUserId;
 
+                      //display the name of a member of the group chat
+                      Widget senderLabel = SizedBox.shrink();
+                      if(widget.isGroupChat && !isMe){
+                        senderLabel = Padding(
+                          padding: const EdgeInsets.only(left: 8, bottom: 2),
+                          child: Text(
+                            msg['senderName'] ?? "Unknown",
+                            style: const TextStyle(
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black54,
+                            ),
+                          ),
+                        );
+                      }
+
+                      Widget bubble;
+
                       //Imported text bubbles
                       if(msg['mediaType'] == "" || msg['mediaType'] == null){
-                        return BubbleSpecialOne(
+                        bubble = BubbleSpecialOne(
                           isSender: isMe,
                           text: msg['text'] ?? "",
                           color: isMe ? const Color(0xFFD0F6C1) : const Color(0xFFFFD8DF),
@@ -143,8 +175,8 @@ class _ChatPageState extends State<ChatPage>{
                       }
 
                       //the image bubble
-                      if(msg['mediaType'] == "image"){
-                        return BubbleNormalImage(
+                      else if(msg['mediaType'] == "image"){
+                        bubble = BubbleNormalImage(
                           id: msg['senderId'],
                           image: Image.network(
                             msg['mediaUrl'],
@@ -157,14 +189,23 @@ class _ChatPageState extends State<ChatPage>{
                       }
 
                       //video bubble
-                      if(msg['mediaType'] == "video"){
-                        return VideoBubble(
+                      else if(msg['mediaType'] == "video"){
+                        bubble = VideoBubble(
                           videoUrl: msg['mediaUrl'], 
                           isSender: isMe,
                           );
+                      }else{
+                        bubble = const SizedBox.shrink();
                       }
 
-                      return const SizedBox.shrink();
+                      return Column(
+                        crossAxisAlignment: isMe ?
+                          CrossAxisAlignment.end : CrossAxisAlignment.start,
+                          children: [
+                            senderLabel,
+                            bubble,
+                          ],
+                      );
                     },
                   );
                 },

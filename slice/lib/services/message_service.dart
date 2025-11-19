@@ -10,6 +10,7 @@ class MessageService {
   Future<void> messageSend({
     required String convoId,
     required String senderId,
+    required String senderName,
     String text = '',
     String mediaUrl = '',
     String? mediaType,
@@ -20,6 +21,7 @@ class MessageService {
       .collection('messages')
       .add({
         'senderId': senderId,
+        'senderName': senderName,
         'text': text,
         'mediaUrl': mediaUrl,
         'mediaType': mediaType,
