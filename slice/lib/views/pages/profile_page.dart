@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:slice/services/auth/auth_service.dart';
 import 'package:slice/data/notifiers.dart';
-
+import 'package:firebase_auth/firebase_auth.dart';
 class ProfilePage extends StatelessWidget {
   const ProfilePage({super.key});
 
@@ -12,6 +12,9 @@ class ProfilePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final user = FirebaseAuth.instance.currentUser;
+    final username = user?.displayName ?? 'User';
+
     return Scaffold(
       body: Center(
         child: Column(
@@ -21,7 +24,7 @@ class ProfilePage extends StatelessWidget {
               radius: 80,
               child: Icon(Icons.person, size: 70,),
             ),
-            Text("Username"),
+            Text(username),
             SizedBox(
               width: 300,
               child: FilledButton(

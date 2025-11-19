@@ -23,6 +23,7 @@ class _SignUpPageState extends State<SignUpPage> {
         await authService.signUpWithEmailPassword(
           _emailController.text,
           _passwordController.text,
+          _usernameController.text
         );
         if (mounted) Navigator.pop(context);
       }
