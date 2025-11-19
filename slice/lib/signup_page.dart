@@ -1,26 +1,5 @@
 import 'package:flutter/material.dart';
-
-void main() {
-  runApp(const SliceApp());
-}
-
-class SliceApp extends StatelessWidget {
-  const SliceApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Slice',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
-        useMaterial3: true,
-        scaffoldBackgroundColor: const Color(0xFFF2FFF2), // light mint
-      ),
-      home: const SignUpPage(),
-    );
-  }
-}
+import 'package:slice/services/auth/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -33,20 +12,46 @@ class _SignUpPageState extends State<SignUpPage> {
   final _usernameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmPasswordController = TextEditingController();
+
+  void signup() async {
+    // authentication service
+    final authService = AuthService();
+
+    if(_passwordController.text == _confirmPasswordController.text) {
+      try {
+        await authService.signUpWithEmailPassword(
+          _emailController.text,
+          _passwordController.text,
+          _usernameController.text
+        );
+        if (mounted) Navigator.pop(context);
+      }
+      catch (e) {
+        debugPrint(e.toString());
+      }
+    }
+    else {
+      debugPrint("Passwords don't match");
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      extendBodyBehindAppBar: true,
+      appBar: AppBar(),
       body: SafeArea(
+        top: false,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Image.asset(
-                  'assets/slice_logo.jpeg', // watermelon icon
-                  height: 100,
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(20),
+                  child: Image.asset('assets/slice_logo.jpeg', height: 100),
                 ),
                 const SizedBox(height: 10),
                 const Text(
@@ -127,6 +132,24 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                   ),
                 ),
+                const SizedBox(height: 15),
+
+                // Confirm Password 
+                TextField(
+                  controller: _confirmPasswordController,
+                  obscureText: true,
+                  decoration: InputDecoration(
+                    hintText: 'Confirm Password',
+                    filled: true,
+                    fillColor: Colors.white,
+                    contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 16, vertical: 14),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: const BorderSide(color: Colors.black12),
+                    ),
+                  ),
+                ),
                 const SizedBox(height: 25),
 
                 // Sign Up button
@@ -136,6 +159,7 @@ class _SignUpPageState extends State<SignUpPage> {
                     onPressed: () {
                       debugPrint(
                           'Username: ${_usernameController.text}, Email: ${_emailController.text}');
+                          signup();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
@@ -175,6 +199,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   textAlign: TextAlign.center,
                 ),
+                //const SizedBox(height: 100),
               ],
             ),
           ),

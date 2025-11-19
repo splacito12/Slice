@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:slice/data/notifiers.dart';
+import 'package:slice/login_page.dart';
 import 'package:slice/views/pages/addfriend_page.dart';
 import 'package:slice/views/pages/creategroup_page.dart';
 import 'package:slice/views/pages/home_page.dart';
@@ -35,7 +36,6 @@ class WidgetTree extends StatelessWidget {
               Navigator.push(context, MaterialPageRoute(builder: (context) {
                 return AddFriendPage();
               },));
-
             },
           ),
         ],
@@ -45,22 +45,6 @@ class WidgetTree extends StatelessWidget {
         return pages.elementAt(currentPage);
       },),
 
-      // body: SingleChildScrollView(
-      //   child: Column(
-      //     children: <Widget>[
-      //       SafeArea(
-      //         child: Padding(
-      //           padding: EdgeInsets.only(left: 16,top: 16),
-      //           child: Row(
-      //             children: <Widget>[
-      //               Text("[Insert Conversations]",style: TextStyle(fontSize: 20),)
-      //             ]
-      //           )
-      //         )
-      //       )
-      //     ]
-      //   ),
-      // ),
       bottomNavigationBar: NavigationbarWidget()
     );
   }
