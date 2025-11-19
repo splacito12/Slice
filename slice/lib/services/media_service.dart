@@ -3,8 +3,15 @@ import 'package:firebase_storage/firebase_storage.dart';
 import 'package:image_picker/image_picker.dart';
 
 class MediaService {
-  final ImagePicker _imagePicker = ImagePicker();
-  final FirebaseStorage _firebaseStorage = FirebaseStorage.instance;
+  final ImagePicker _imagePicker;
+  final FirebaseStorage _firebaseStorage;
+
+  //allows us to use mockito
+  MediaService({
+    ImagePicker? picker, 
+    FirebaseStorage? storage,
+  }) : _imagePicker = picker ?? ImagePicker(),
+  _firebaseStorage = storage ?? FirebaseStorage.instance;
 
   //Pick media function
   Future<File?> _pickMedia({required bool isImage}) async{

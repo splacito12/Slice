@@ -1,7 +1,11 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class MessageService {
-  final FirebaseFirestore _firebaseFirestore = FirebaseFirestore.instance;
+  final FirebaseFirestore _firebaseFirestore;
+
+  //for easier injection of mock tests
+  MessageService({FirebaseFirestore ? firestore})
+    : _firebaseFirestore = firestore ?? FirebaseFirestore.instance;
 
   Future<void> messageSend({
     required String convoId,
