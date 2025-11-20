@@ -1,32 +1,37 @@
-import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'package:slice/services/auth/auth_gate.dart';
+import 'package:slice/views/pages/home_page.dart';
+import 'firebase_options.dart';
+import 'views/widget_tree.dart';
+import 'package:slice/login_page.dart';
+//import 'package:slice/firebase_msg.dart';
 import 'login_page.dart'; // make sure this file is in /lib
 import 'signup_page.dart'; // make sure this file is in /lib
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp;
-  runApp(const SliceApp());
+    await Firebase.initializeApp(
+      // name: "slice-32bc8",
+      options: DefaultFirebaseOptions.currentPlatform,
+  );
+  runApp(const Slice());
 }
 
-class SliceApp extends StatelessWidget {
-  const SliceApp({super.key});
+class Slice extends StatelessWidget {
+  const Slice({super.key});
 
+  // This widget is the root of your application.
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Slice',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.greenAccent),
         useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF2FFF2),
       ),
-      home: const LoginPage(), // start on login
-      routes: {
-        '/login': (context) => const LoginPage(),
-        '/signup': (context) => const SignUpPage(),
-      },
+      home: const AuthGate(),
     );
   }
 }
