@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slice/services/auth/auth_service.dart';
 import 'signup_page.dart'; // so we can navigate to your existing sign-up screen
 
 class LoginPage extends StatefulWidget {
@@ -11,6 +12,19 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+
+  void login() async {
+    // authentication service
+    final authService = AuthService();
+
+    try {
+      await authService.signInWithEmailPassword(_emailController.text, _passwordController.text);
+    }
+    catch (e) {
+      debugPrint(e.toString());
+    }
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +96,8 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      debugPrint('Login: ${_emailController.text}');
+                      //debugPrint('Login: ${_emailController.text}');
+                      login();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
@@ -115,7 +130,9 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
+                      Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        return SignUpPage();
+                      },));
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFE5E5),
@@ -129,6 +146,8 @@ class _LoginPageState extends State<LoginPage> {
                             fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
+
+                
                 const SizedBox(height: 15),
 
                 // Google
