@@ -29,15 +29,35 @@ class FriendService {
     if (myUid == targetUid) throw Exception("Cannot send yourself a request");
 
     final requestId = '${myUid}_$targetUid';
+    final existingRequest = await _firestore
+        .collection('friend_requests')
+        .doc(requestId)
+        .get();
+    if (existingRequest.exists) throw Exception("Friend request already sent");
+
+    final alreadyFriends = await _firestore
+        .collection('users')
+        .doc(myUid)
+        .collection('friends')
+        .doc(targetUid)
+        .get();
+    if (alreadyFriends.exists) throw Exception("This user is already your friend");
+
+    final myAccount = await _firestore.collection('users').doc(myUid).get();
 
     await _firestore.collection('friend_requests').doc(requestId).set({
       'fromUid': myUid,
+      'fromUsername': myAccount['username'],
+      'fromProfilePic': myAccount['profilePic'] ?? '',
       'toUid': targetUid,
     });
   }
 
   // accept request
   Future<void> acceptFriendRequest(String requestId, fromUid, toUid) async {
+    final fromAccount = await _firestore.collection('users').doc(fromUid).get();
+    final toAccount = await _firestore.collection('users').doc(toUid).get();
+
     await _firestore.runTransaction((transaction) async {
       transaction.set(
         _firestore
@@ -45,7 +65,9 @@ class FriendService {
             .doc(fromUid)
             .collection('friends')
             .doc(toUid),
-        {'friendUid': toUid},
+        {'friendUid': toUid, 
+        'username': toAccount['username'],
+        'profilePic': toAccount['profilePic'] ?? ''},
       );
       transaction.set(
         _firestore
@@ -53,7 +75,9 @@ class FriendService {
             .doc(toUid)
             .collection('friends')
             .doc(fromUid),
-        {'friendUid': fromUid},
+        {'friendUid': fromUid,
+         'username': fromAccount['username'],
+         'profilePic': fromAccount['profilePic'] ?? ''},
       );
 
       transaction.delete(

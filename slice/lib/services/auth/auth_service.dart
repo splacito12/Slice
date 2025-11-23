@@ -38,7 +38,7 @@ class AuthService {
         'uid': userCredential.user!.uid,
         'username': username,
         'email': email,
-        'friendsCount': 0
+        'profilePic': ''
       });
 
       return userCredential;
