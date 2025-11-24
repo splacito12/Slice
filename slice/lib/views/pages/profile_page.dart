@@ -16,6 +16,15 @@ class ProfilePage extends StatelessWidget {
     final username = user?.displayName ?? 'User';
 
     return Scaffold(
+      appBar: AppBar(
+        backgroundColor: Color.fromRGBO(246, 255, 245, 1),
+        toolbarHeight: 80,
+        title: Text(
+          "Profile",
+          style: TextStyle(fontSize: 30, fontWeight: FontWeight.bold),
+        ),
+      ),
+
       body: Center(
         child: Column(
           children: [
