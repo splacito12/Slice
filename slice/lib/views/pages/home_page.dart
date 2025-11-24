@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:slice/chat_page.dart';
 import 'package:slice/views/pages/addfriend_page.dart';
 import 'package:slice/services/chat/chat_service.dart';
 
@@ -63,12 +64,14 @@ class _HomePageState extends State<HomePage> {
                         radius: 30,
                         backgroundImage: profilePic != null && profilePic != ''
                         ? NetworkImage(profilePic) 
-                        : AssetImage('assets/slice_logo.jpeg')
+                        : const AssetImage('assets/default_profile.png')
                         ),
                       title: Text(friendUsername, style: TextStyle(fontWeight: FontWeight.w600)),
                       subtitle: Text('latest text placeholder'),
                       onTap: () {
-                        
+                        //  Navigator.push(context, MaterialPageRoute(builder: (context) {
+                        //   return AddFriendPage();
+                        // },));
                       },
                     );
                   },

@@ -151,7 +151,7 @@ class _AddFriendPageState extends State<AddFriendPage> {
                           leading: CircleAvatar(
                             backgroundImage: profilePic != null && profilePic != ''
                             ? NetworkImage(profilePic) 
-                            : AssetImage('assets/slice_logo.jpeg')
+                            : const AssetImage('assets/default_profile.png')
                             ),
                           title: Text(fromUsername),
                           trailing: Row(
