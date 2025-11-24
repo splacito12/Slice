@@ -1,14 +1,14 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
+import 'package:flutter/services.dart';
 
 
 import 'package:slice/widgets/video_bubble.dart';
 import 'package:slice/services/media_service.dart';
 import 'package:slice/services/message_service.dart';
-
-//this is not the official chats page. need to create one for sharing media
+import 'package:slice/services/encryption _service.dart';
+import 'package:slice/controllers/chat_controllers.dart';
 
 class ChatPage extends StatefulWidget{
   final String convoId;
@@ -46,67 +46,70 @@ class _ChatPageState extends State<ChatPage>{
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
 
-  late MediaService _mediaService;
-  late MessageService _messageService;
-  late FirebaseFirestore _firebaseFirestore;
+  late ChatControllers _chatControllers;
 
   //initstate so that its easier to use mock tests
   @override
   void initState(){
     super.initState();
-    _mediaService = widget.mediaService ?? MediaService();
-    _messageService = widget.messageService ?? MessageService();
-    _firebaseFirestore = widget.firestore ?? FirebaseFirestore.instance;
+    
+    _chatControllers = ChatControllers(
+      convoId: widget.convoId,
+      currUserId: widget.currUserId,
+      currUserName: widget.currUserName,
+      chatPartnerId: widget.chatPartnerId,
+      isGroupChat: widget.isGroupChat,
+      groupName: widget.groupName,
+      chatMembers: widget.chatMembers,
+      medService: widget.mediaService,
+      mesgService: widget.messageService,
+      firestore: widget.firestore,
+      );
+    _initControllers();
+
+  }
+
+  Future<void> _initControllers() async{
+    await _chatControllers.init();
+    setState(() {});
   }
 
   //message
-  Future<void> _sendMessage({String? text, File? file, String? mediaType}) async{
-    if ((text == null || text.trim().isEmpty) && file == null){
+  Future<void> _sendMessage() async{
+    final text = _textEditingController.text.trim();
+    if(text.isEmpty){
       return;
     }
 
-    //upload our media into the firebase storage
-    String mediaUrl = "";
-    if(file != null && mediaType != null){
-      mediaUrl = await _mediaService.uploadMedia(file: file, convoId: widget.convoId);
-    }
-
-    //message data
-    await _messageService.messageSend(
-      convoId: widget.convoId,
-     senderId: widget.currUserId,
-     senderName: widget.currUserName,
-     text: text ?? "",
-     mediaType: mediaType,
-     mediaUrl: mediaUrl,
-     );
-
+    await _chatControllers.sendMessage(text: text);
     _textEditingController.clear();
 
-    Future.delayed(const Duration(milliseconds: 300), (){
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    Future.delayed(const Duration(milliseconds: 250), (){
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     });
   }
 
   //Pick media function
   Future<void> _pickMedia(bool isImage) async{
-    File? file = await _mediaService.pickMedia(isImage);
+    await _chatControllers.pickMedia(isImage);
 
-    if(file == null){
-      return;
-    }
-
-    await _sendMessage(file: file, mediaType: isImage ? "image" : "video",);
+    Future.delayed(const Duration(milliseconds: 250), (){
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
   //here will go all the design of the chat page
   @override
   Widget build(BuildContext context){
-    final messageRef = (widget.firestore ?? FirebaseFirestore.instance)
-      .collection('chats')
-      .doc(widget.convoId)
-      .collection('messages')
-      .orderBy('timestamp', descending: false);
+    if(!_chatControllers.initialized){
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final messageRef = _chatControllers.messageStream();
 
       //for group chats
       final String appBarTitle = widget.isGroupChat ?
@@ -131,7 +134,7 @@ class _ChatPageState extends State<ChatPage>{
           children: [
             Expanded(
               child: StreamBuilder(
-                stream: messageRef.snapshots(), 
+                stream: _chatControllers.messageStream(), 
                 builder: (context, snapshot){
                   if(!snapshot.hasData){
                     return const Center(child: CircularProgressIndicator());
@@ -162,7 +165,7 @@ class _ChatPageState extends State<ChatPage>{
                         );
                       }
 
-                      Widget bubble;
+                      Widget bubble = const SizedBox();
 
                       //Imported text bubbles
                       if(msg['mediaType'] == "" || msg['mediaType'] == null){
@@ -176,28 +179,49 @@ class _ChatPageState extends State<ChatPage>{
 
                       //the image bubble
                       else if(msg['mediaType'] == "image"){
-                        bubble = BubbleNormalImage(
-                          id: msg['senderId'],
-                          image: Image.network(
-                            msg['mediaUrl'],
-                            width: 200,
-                            height: 200,
-                            fit: BoxFit.cover,
-                          ),
-                          color: Colors.transparent,
+                        bubble = FutureBuilder<Uint8List>(
+                          future: _chatControllers.mediaService.decrypt(msg['mediaUrl']),
+                          builder: (context, snap){
+                            if(!snap.hasData){
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                                );
+                            }
+                            return BubbleNormalImage(
+                              id: msg['senderId'],
+                              image: Image.memory(
+                                snap.data!,
+                                width: 150,
+                                height: 150,
+                                fit: BoxFit.cover,
+                              ),
+
+                              color: Colors.transparent,
+                            );
+                          },
                         );
                       }
 
                       //video bubble
                       else if(msg['mediaType'] == "video"){
-                        bubble = VideoBubble(
-                          videoUrl: msg['mediaUrl'], 
-                          isSender: isMe,
-                          );
-                      }else{
-                        bubble = const SizedBox.shrink();
-                      }
+                        bubble = FutureBuilder<Uint8List>(
+                          future: _chatControllers.mediaService.decrypt(msg['mediaUrl']),
+                          builder: (context, snap){
+                            if(!snap.hasData){
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              );
+                            }
 
+                            return VideoBubble(
+                              bytes: snap.data!,
+                              isSender: isMe,
+                            );
+                          },
+                        );
+                      }
                       return Column(
                         crossAxisAlignment: isMe ?
                           CrossAxisAlignment.end : CrossAxisAlignment.start,
@@ -216,7 +240,7 @@ class _ChatPageState extends State<ChatPage>{
             ClipRRect(
               borderRadius: BorderRadiusGeometry.circular(20),
               child: MessageBar(
-                onSend: (text) => _sendMessage(text: text),
+                onSend: (text) => _sendMessage(),
                 messageBarHintText: "Type a message...",
                 actions: [
                   IconButton(
