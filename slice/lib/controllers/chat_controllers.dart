@@ -15,12 +15,12 @@ class ChatControllers {
   final List<String>? chatMembers;
 
   final FirebaseFirestore firestore;
-  final MessageService? messageService;
-  final MediaService? mediaService;
+  final MessageService? mesgService;
+  final MediaService? medService;
   
-  late MediaService _mediaService;
-  late MessageService _messageService;
-  late EncryptService _encryptService;
+  late MediaService mediaService;
+  late MessageService messageService;
+  late EncryptService encryptService;
 
   bool initialized = false;
 
@@ -32,8 +32,8 @@ class ChatControllers {
     this.isGroupChat = false,
     this.groupName,
     this.chatMembers,
-    this.mediaService,
-    this.messageService,
+    this.medService,
+    this.mesgService,
     FirebaseFirestore? firestore,
   }) : firestore = firestore ?? FirebaseFirestore.instance;
 
@@ -49,9 +49,9 @@ class ChatControllers {
       .get();
     final mediaKey = chatDoc['mediaKey'];
 
-    _encryptService = EncryptService(mediaKey);
-    _mediaService = mediaService ?? MediaService(encryptService: _encryptService);
-    _messageService = messageService ?? MessageService();
+    encryptService = EncryptService(mediaKey);
+    mediaService = medService ?? MediaService(encryptService: encryptService);
+    messageService = mesgService ?? MessageService();
 
     initialized = true;
     
@@ -83,10 +83,10 @@ class ChatControllers {
     //upload media
     String mediaUrl = "";
     if(file != null && mediaType != null){
-      mediaUrl = await _mediaService.uploadMedia(file: file, convoId: convoId);
+      mediaUrl = await mediaService.uploadMedia(file: file, convoId: convoId);
     }
 
-    await _messageService.messageSend(
+    await messageService.messageSend(
       convoId: convoId, 
       senderId: currUserId, 
       senderName: currUserName,
@@ -102,7 +102,7 @@ class ChatControllers {
       await init();
     }
 
-    final file = await _mediaService.pickMedia(isImage);
+    final file = await mediaService.pickMedia(isImage);
     
     if(file == null){
       return;
