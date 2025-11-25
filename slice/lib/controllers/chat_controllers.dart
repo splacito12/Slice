@@ -114,4 +114,14 @@ class ChatControllers {
     );
   }
 
+  //get profile picture
+  Future<String?> getPFP(String userId) async{
+    final doc = await firestore
+      .collection('users')
+      .doc(userId)
+      .get();
+    
+    return doc.data()?['profilePicture'];
+  }
+
 }

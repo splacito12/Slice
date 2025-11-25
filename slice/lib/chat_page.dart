@@ -47,11 +47,13 @@ class _ChatPageState extends State<ChatPage>{
   final TextEditingController _textEditingController = TextEditingController();
 
   late ChatControllers _chatControllers;
+  String? partnerPfp;
 
   //initstate so that its easier to use mock tests
   @override
   void initState(){
     super.initState();
+
     
     _chatControllers = ChatControllers(
       convoId: widget.convoId,
@@ -70,7 +72,11 @@ class _ChatPageState extends State<ChatPage>{
   }
 
   Future<void> _initControllers() async{
+
     await _chatControllers.init();
+    if(!widget.isGroupChat && widget.chatPartnerId != null){
+      partnerPfp = await _chatControllers.getPFP(widget.chatPartnerId!);
+    }
     setState(() {});
   }
 
@@ -119,10 +125,24 @@ class _ChatPageState extends State<ChatPage>{
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
-          title: Text(
-            appBarTitle,
-            style: const TextStyle(color: Colors.white),
-            ),
+          title: Row(
+            children: [
+              if(!widget.isGroupChat)
+                CircleAvatar(
+                  radius: 18,
+                  backgroundImage: partnerPfp != null ?
+                    NetworkImage(partnerPfp!) : null,
+                  backgroundColor: Colors.grey[300],
+                  child: partnerPfp == null ? const Icon(Icons.person, color: Colors.white) : null,
+                ),
+                
+              const SizedBox(width: 10),
+              Text(
+                appBarTitle,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
 
           backgroundColor: Colors.green[700],
           leading: IconButton(onPressed: () => Navigator.pop(context), //takes us to the previous page 
@@ -222,14 +242,50 @@ class _ChatPageState extends State<ChatPage>{
                           },
                         );
                       }
-                      return Column(
-                        crossAxisAlignment: isMe ?
-                          CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            senderLabel,
-                            bubble,
-                          ],
+                      return FutureBuilder<String?>(
+                        future: _chatControllers.getPFP(msg['senderId']),
+                        builder: (context, snapshot){
+                          final profileUrl = snapshot.data;
+
+                          Widget avatar = isMe ? const SizedBox(width: 40)
+                            : CircleAvatar(
+                              radius: 16,
+                              backgroundImage: profileUrl!= null ? NetworkImage(profileUrl) : null,
+                              backgroundColor: Colors.grey[300],
+                              child: profileUrl == null ?
+                                const Icon(Icons.person, size: 18, color: Colors.white) : null,
+                          );
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                              children: [
+                                if(!isMe) avatar,
+
+                                Column(
+                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    senderLabel,
+                                    bubble,
+                                  ],
+                                ),
+
+                                if(isMe) const SizedBox(width: 40),
+                              ],
+                            ),
+                          );
+                        },
                       );
+                      // return Column(
+                      //   crossAxisAlignment: isMe ?
+                      //     CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      //     children: [
+                      //       senderLabel,
+                      //       bubble,
+                      //     ],
+                      // );
                     },
                   );
                 },
