@@ -16,11 +16,12 @@ class _NavigationbarState extends State<NavigationbarWidget> {
       builder: (context, currentPage, child) {
         return NavigationBar(
           height: 60.0,
-          backgroundColor: Color.fromRGBO(153, 226, 145, 1),
+          backgroundColor: const Color.fromRGBO(153, 226, 145, 1),
           destinations: [
+            // HOME TAB
             NavigationDestination(
               icon: Padding(
-                padding: EdgeInsets.only(top: 15.0),
+                padding: const EdgeInsets.only(top: 15.0),
                 child: Icon(
                   Icons.home_rounded,
                   size: 35.0,
@@ -29,20 +30,11 @@ class _NavigationbarState extends State<NavigationbarWidget> {
               ),
               label: "",
             ),
+
+            // PROFILE TAB
             NavigationDestination(
               icon: Padding(
-                padding: EdgeInsets.only(top: 15.0),
-                child: Icon(
-                  Icons.add_box_outlined,
-                  size: 35.0,
-                  color: Colors.black,
-                ),
-              ),
-              label: "",
-            ),
-            NavigationDestination(
-              icon: Padding(
-                padding: EdgeInsets.only(top: 15.0),
+                padding: const EdgeInsets.only(top: 15.0),
                 child: Icon(
                   Icons.account_circle,
                   size: 35.0,
