@@ -61,8 +61,8 @@ class _ChatPageState extends State<ChatPage>{
       isGroupChat: widget.isGroupChat,
       groupName: widget.groupName,
       chatMembers: widget.chatMembers,
-      medService: widget.mediaService,
-      mesgService: widget.messageService,
+      media: widget.mediaService,
+      msg: widget.messageService,
       firestore: widget.firestore,
       );
     _initControllers();
