@@ -135,7 +135,7 @@ class _ChatPageState extends State<ChatPage>{
                   backgroundColor: Colors.grey[300],
                   child: partnerPfp == null ? const Icon(Icons.person, color: Colors.white) : null,
                 ),
-                
+
               const SizedBox(width: 10),
               Text(
                 appBarTitle,
@@ -194,6 +194,7 @@ class _ChatPageState extends State<ChatPage>{
                           text: msg['text'] ?? "",
                           color: isMe ? const Color(0xFFD0F6C1) : const Color(0xFFFFD8DF),
                           textStyle: const TextStyle(fontSize: 16),
+                          tail: true,
                         );
                       }
 
