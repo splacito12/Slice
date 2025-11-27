@@ -124,4 +124,14 @@ class ChatControllers {
     return doc.data()?['profilePicture'];
   }
 
+  //for retriving usernames from firestore
+  Future<String> retrieveUsername(String userId) async{
+    final doc = await firestore
+      .collection('users')
+      .doc(userId)
+      .get();
+
+    return doc['username'];
+  }
+
 }
