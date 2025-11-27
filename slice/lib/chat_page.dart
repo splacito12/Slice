@@ -144,7 +144,7 @@ class _ChatPageState extends State<ChatPage>{
             ],
           ),
 
-          backgroundColor: Colors.green[700],
+          backgroundColor: const Color(0xFFCEF7B4),
           leading: IconButton(onPressed: () => Navigator.pop(context), //takes us to the previous page 
           icon: const Icon( Icons.arrow_back, color: Colors.white,),
           ),
@@ -299,6 +299,7 @@ class _ChatPageState extends State<ChatPage>{
               child: MessageBar(
                 onSend: (text) => _sendMessage(),
                 messageBarHintText: "Type a message...",
+                sendButtonColor: const Color(0xFFA5D6A7),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.image, color: Colors.grey),
