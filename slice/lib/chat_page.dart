@@ -48,6 +48,7 @@ class _ChatPageState extends State<ChatPage>{
 
   late ChatControllers _chatControllers;
   String? partnerPfp;
+  String? chatPartnerUsername;
 
   //initstate so that its easier to use mock tests
   @override
@@ -76,6 +77,7 @@ class _ChatPageState extends State<ChatPage>{
     await _chatControllers.init();
     if(!widget.isGroupChat && widget.chatPartnerId != null){
       partnerPfp = await _chatControllers.getPFP(widget.chatPartnerId!);
+      chatPartnerUsername = await _chatControllers.retrieveUsername(widget.chatPartnerId!);
     }
     setState(() {});
   }
@@ -119,7 +121,7 @@ class _ChatPageState extends State<ChatPage>{
 
       //for group chats
       final String appBarTitle = widget.isGroupChat ?
-        (widget.groupName ?? "Group Chat") : (widget.chatPartnerId ?? "Chat");
+        (widget.groupName ?? "Group Chat") : (chatPartnerUsername ?? "Chat");
 
       //design
       return Scaffold(
