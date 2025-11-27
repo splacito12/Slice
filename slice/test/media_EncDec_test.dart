@@ -87,4 +87,56 @@ void main(){
     verify(mockEncryptService.decryptBytes(encryptBytes)).called(1);
     expect(result, decryptBytes);
   });
+
+  //test whether it actually can encrypt and decrypt bytes
+  test("EncryptService can encrypt and decrypt actual bytes", () {
+    const keyHex = "00112233445566778899aabbccddeeff"; // 32 hex chars = 16 bytes
+    final service = EncryptService(keyHex);
+
+    final original = Uint8List.fromList([1, 2, 3, 4, 5]);
+
+    final encrypted = service.encryptBytes(original);
+    final decrypted = service.decryptBytes(encrypted);
+
+    expect(decrypted, original);
+  });
+
+  //test for different sizd AES keys
+  test("EncryptService supports different sized AES keys", (){
+    final original = Uint8List.fromList([10,20, 30, 40, 50]);
+
+    //AES-128
+    const key128 = "00112233445566778899aabbccddeeff";
+    final size128 = EncryptService(key128);
+    expect(size128.decryptBytes(size128.encryptBytes(original)), original, reason: "AES-128 failed",);
+
+    //AES-192 
+    const key192 = "00112233445566778899aabbccddeeff0011223344556677"; 
+    final size192 = EncryptService(key192);
+    expect(size192.decryptBytes(size192.encryptBytes(original)), original, reason: "AES-192 failed",);
+
+    //AES-256
+    const key256 = "00112233445566778899aabbccddeeff00112233445566778899aabbccddeeff";
+    final size256 = EncryptService(key256);
+    expect(size256.decryptBytes(size256.encryptBytes(original)), original, reason: "AES-256 failed",);
+  });
+
+  //Test whether the IV changes on every encryption
+  test("New IV is generated for each encryption", (){
+    const keyHex = "00112233445566778899aabbccddeeff";
+    final service = EncryptService(keyHex);
+
+    final data = Uint8List.fromList([1, 2, 3, 4, 5]);
+
+    final firstEncryption = service.encryptBytes(data);
+    final secondEncryption = service.encryptBytes(data);
+
+    final firstIv = firstEncryption.sublist(0, 12);
+    final secondIv = secondEncryption.sublist(0, 12);
+
+    //the Iv's shouldn't match
+    expect(firstIv, isNot(equals(secondIv)), reason: "IV should change");
+    expect(firstEncryption, isNot(equals(secondEncryption)), reason: "the ciphertext should also be different");
+  });
+
 }
