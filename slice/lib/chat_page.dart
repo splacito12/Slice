@@ -15,6 +15,7 @@ class ChatPage extends StatefulWidget{
   final String currUserId;
   final String currUserName;
   final String? chatPartnerId; //for 1-1
+  final String? chatPartnerUsername;
   final bool isGroupChat; //for group chats
   final String? groupName;
   final List<String>? chatMembers;
@@ -30,6 +31,7 @@ class ChatPage extends StatefulWidget{
     required this.currUserId,
     required this.currUserName,
     this.chatPartnerId,
+    this.chatPartnerUsername,
     this.isGroupChat = false,
     this.groupName,
     this.chatMembers,
@@ -110,7 +112,7 @@ class _ChatPageState extends State<ChatPage>{
 
       //for group chats
       final String appBarTitle = widget.isGroupChat ?
-        (widget.groupName ?? "Group Chat") : (widget.chatPartnerId ?? "Chat");
+        (widget.groupName ?? "Group Chat") : (widget.chatPartnerUsername ?? "Chat");
 
       //design
       return Scaffold(
