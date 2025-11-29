@@ -144,13 +144,14 @@ class _AddFriendPageState extends State<AddFriendPage> {
                           "${request['fromUid']}_${request['toUid']}";
                       final fromUid = request['fromUid'];
                       final fromUsername = request['fromUsername'];
+                      final profilePic = request['fromProfilePic'];
 
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: request['fromProfilePic'] != null && request['fromProfilePic'] != ''
-                            ? NetworkImage(request['fromProficePic']) 
-                            : AssetImage('assets/slice_logo.jpeg')
+                            backgroundImage: profilePic != null && profilePic != ''
+                            ? NetworkImage(profilePic) 
+                            : const AssetImage('assets/default_profile.png')
                             ),
                           title: Text(fromUsername),
                           trailing: Row(
