@@ -273,7 +273,6 @@ class _HomePageState extends State<HomePage> {
                               FirebaseAuth.instance.currentUser!.displayName ??
                               "You",
                           chatPartnerId: friendUid,
-                          chatPartnerUsername: chat["username"],
                           isGroupChat: false,
                         ),
                       ),
