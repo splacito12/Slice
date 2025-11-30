@@ -158,7 +158,7 @@ class _ChatPageState extends State<ChatPage> {
       );
     }
 
-    final messageRef = _chatControllers.messageStream();
+      final messageRef = _chatControllers.messageStream();
 
       //for group chats
       final String appBarTitle = widget.isGroupChat ?
@@ -336,24 +336,16 @@ class _ChatPageState extends State<ChatPage> {
                           );
                         },
                       );
-                      // return Column(
-                      //   crossAxisAlignment: isMe ?
-                      //     CrossAxisAlignment.end : CrossAxisAlignment.start,
-                      //     children: [
-                      //       senderLabel,
-                      //       bubble,
-                      //     ],
-                      // );
                     },
                   );
                 },
               ),
             ),
-          ),
 
-            //The message bar
+              //The message bar
             ClipRRect(
-              borderRadius: BorderRadiusGeometry.circular(20),
+              borderRadius: BorderRadius.circular(20),
+
               child: MessageBar(
                 onSend: (text) => _sendMessage(),
                 messageBarHintText: "Type a message...",
@@ -369,16 +361,10 @@ class _ChatPageState extends State<ChatPage> {
                     onPressed: () => _pickMedia(false),
                   ),
                 ],
-                ),
-                IconButton(
-                  icon: const Icon(Icons.video_library, color: Colors.grey),
-                  onPressed: () => _pickMedia(false),
-                ),
-              ],
-            ),
-          )
-        ],
-      ),
-    );
+              ),
+            )
+          ],
+        ),
+      );
   }
 }
