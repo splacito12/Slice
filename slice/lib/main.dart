@@ -8,6 +8,7 @@ import 'package:slice/login_page.dart';
 //import 'package:slice/firebase_msg.dart';
 import 'login_page.dart'; // make sure this file is in /lib
 import 'signup_page.dart'; // make sure this file is in /lib
+import 'firebase_options.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

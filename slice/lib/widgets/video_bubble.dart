@@ -1,13 +1,16 @@
+import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
+import 'package:path_provider/path_provider.dart';
 
 class VideoBubble extends StatefulWidget{
-  final String videoUrl;
+  final Uint8List bytes;
   final bool isSender;
 
   const VideoBubble({
     super.key,
-    required this.videoUrl,
+    required this.bytes,
     required this.isSender,
   });
 
@@ -16,23 +19,34 @@ class VideoBubble extends StatefulWidget{
 }
 
 class _VideoBubbleState extends State<VideoBubble>{
-  late VideoPlayerController _videoPlayerController;
+  VideoPlayerController? _videoPlayerController;
   bool _init = false;
 
   @override
   void initState() {
     super.initState();
-    _videoPlayerController = VideoPlayerController.networkUrl(Uri.parse(widget.videoUrl))
-      ..initialize().then((_){
-        setState(() => _init = true);
-      });
+    _loadVideo();
+  }
 
-      _videoPlayerController.setLooping(false);
+  Future<void> _loadVideo() async{
+    //write decryption into a temporary file
+    final dirTemp = await getTemporaryDirectory();
+    final fileTemp = File("${dirTemp.path}/${DateTime.now().millisecondsSinceEpoch}.mp4");
+
+    await fileTemp.writeAsBytes(widget.bytes);
+
+    //now we need to load a video
+    _videoPlayerController = VideoPlayerController.file(fileTemp);
+    await _videoPlayerController!.initialize();
+
+    setState(() {
+      _init = true;
+    });
   }
 
   @override
   void dispose(){
-    _videoPlayerController.dispose();
+    _videoPlayerController?.dispose();
     super.dispose();
   }
 
@@ -47,12 +61,16 @@ class _VideoBubbleState extends State<VideoBubble>{
 
     return GestureDetector(
       onTap: (){
-        _videoPlayerController.value.isPlaying ? _videoPlayerController.pause() : _videoPlayerController.play();
+        if(_videoPlayerController!.value.isPlaying){
+          _videoPlayerController!.pause();
+        }else{
+          _videoPlayerController!.play();
+        }
         setState(() {});
       },
       child: AspectRatio(
-        aspectRatio: _videoPlayerController.value.aspectRatio,
-        child: VideoPlayer(_videoPlayerController),
+        aspectRatio: _videoPlayerController!.value.aspectRatio,
+        child: VideoPlayer(_videoPlayerController!),
         ),
     );
   }
