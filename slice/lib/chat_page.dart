@@ -1,24 +1,22 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
-
+import 'package:flutter/services.dart';
 
 import 'package:slice/widgets/video_bubble.dart';
 import 'package:slice/services/media_service.dart';
 import 'package:slice/services/message_service.dart';
-
-//this is not the official chats page. need to create one for sharing media
+import 'package:slice/services/encryption _service.dart';
+import 'package:slice/controllers/chat_controllers.dart';
 
 class ChatPage extends StatefulWidget{
   final String convoId;
   final String currUserId;
   final String currUserName;
-  final String? chatPartnerId; //for 1-1
-  final bool isGroupChat; //for group chats
+  final String? chatPartnerId;
+  final bool isGroupChat;
   final String? groupName;
   final List<String>? chatMembers;
-
 
   final MediaService? mediaService;
   final MessageService? messageService;
@@ -42,96 +40,178 @@ class ChatPage extends StatefulWidget{
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage>{
+class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
 
-  late MediaService _mediaService;
-  late MessageService _messageService;
-  late FirebaseFirestore _firebaseFirestore;
+  late ChatControllers _chatControllers;
+  String? partnerPfp;
+  String? chatPartnerUsername;
 
-  //initstate so that its easier to use mock tests
   @override
-  void initState(){
+  void initState() {
     super.initState();
-    _mediaService = widget.mediaService ?? MediaService();
-    _messageService = widget.messageService ?? MessageService();
-    _firebaseFirestore = widget.firestore ?? FirebaseFirestore.instance;
+    
+    _chatControllers = ChatControllers(
+      convoId: widget.convoId,
+      currUserId: widget.currUserId,
+      currUserName: widget.currUserName,
+      chatPartnerId: widget.chatPartnerId,
+      isGroupChat: widget.isGroupChat,
+      groupName: widget.groupName,
+      chatMembers: widget.chatMembers,
+      media: widget.mediaService,
+      msg: widget.messageService,
+      firestore: widget.firestore,
+      );
+    _initControllers();
+
   }
 
+  Future<void> _initControllers() async{
+
+    await _chatControllers.init();
+    if(!widget.isGroupChat && widget.chatPartnerId != null){
+      partnerPfp = await _chatControllers.getPFP(widget.chatPartnerId!);
+      chatPartnerUsername = await _chatControllers.retrieveUsername(widget.chatPartnerId!);
+    }
+      setState(() {});
+  }
+
+  void markAsRead() {
+  FirebaseFirestore.instance
+      .collection('chats')
+      .doc(widget.convoId)
+      .collection('readStatus')
+      .doc(widget.currUserId)
+      .set({'lastRead': DateTime.now()}, SetOptions(merge: true));
+  }
+
+  // ------------------------------
+  //       LEAVE GROUP
+  // ------------------------------
+  Future<void> _leaveGroup() async {
+    final confirm = await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Leave Group"),
+        content: const Text("Are you sure you want to leave this group?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Leave", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseFirestore.instance
+          .collection("chats")
+          .doc(widget.convoId)
+          .update({
+        "members": FieldValue.arrayRemove([widget.currUserId])
+      });
+
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  // ------------------------------
+  //       SEND MESSAGE
+  // ------------------------------
+
   //message
-  Future<void> _sendMessage({String? text, File? file, String? mediaType}) async{
-    if ((text == null || text.trim().isEmpty) && file == null){
+  Future<void> _sendMessage() async{
+    final text = _textEditingController.text.trim();
+    if(text.isEmpty){
       return;
     }
 
-    //upload our media into the firebase storage
-    String mediaUrl = "";
-    if(file != null && mediaType != null){
-      mediaUrl = await _mediaService.uploadMedia(file: file, convoId: widget.convoId);
-    }
-
-    //message data
-    await _messageService.messageSend(
-      convoId: widget.convoId,
-     senderId: widget.currUserId,
-     senderName: widget.currUserName,
-     text: text ?? "",
-     mediaType: mediaType,
-     mediaUrl: mediaUrl,
-     );
-
+    await _chatControllers.sendMessage(text: text);
     _textEditingController.clear();
 
-    Future.delayed(const Duration(milliseconds: 300), (){
-        _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    Future.delayed(const Duration(milliseconds: 250), (){
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
     });
   }
 
   //Pick media function
   Future<void> _pickMedia(bool isImage) async{
-    File? file = await _mediaService.pickMedia(isImage);
+    await _chatControllers.pickMedia(isImage);
 
-    if(file == null){
-      return;
-    }
-
-    await _sendMessage(file: file, mediaType: isImage ? "image" : "video",);
+    Future.delayed(const Duration(milliseconds: 250), (){
+      _scrollController.jumpTo(_scrollController.position.maxScrollExtent);
+    });
   }
 
-  //here will go all the design of the chat page
   @override
   Widget build(BuildContext context){
-    final messageRef = (widget.firestore ?? FirebaseFirestore.instance)
-      .collection('chats')
-      .doc(widget.convoId)
-      .collection('messages')
-      .orderBy('timestamp', descending: false);
+    if(!_chatControllers.initialized){
+      return const Scaffold(
+        body: Center(
+          child: CircularProgressIndicator(),
+        ),
+      );
+    }
+
+    final messageRef = _chatControllers.messageStream();
 
       //for group chats
       final String appBarTitle = widget.isGroupChat ?
-        (widget.groupName ?? "Group Chat") : (widget.chatPartnerId ?? "Chat");
+        (widget.groupName ?? "Group Chat") : (chatPartnerUsername ?? "Chat");
 
       //design
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
-          title: Text(
-            appBarTitle,
-            style: const TextStyle(color: Colors.white),
-            ),
+          backgroundColor: const Color(0xFFCEF7B4),
+          
+          title: Row(
+            children: [
+              if(!widget.isGroupChat)
+                CircleAvatar(
+                  radius: 18,
+                  backgroundImage: partnerPfp != null ?
+                    NetworkImage(partnerPfp!) : null,
+                  backgroundColor: Colors.grey[300],
+                  child: partnerPfp == null 
+                    ? const Icon(Icons.person, color: Colors.white) 
+                    : null,
+                ),
 
-          backgroundColor: Colors.green[700],
-          leading: IconButton(onPressed: () => Navigator.pop(context), //takes us to the previous page 
-          icon: const Icon( Icons.arrow_back, color: Colors.white,),
+              const SizedBox(width: 10),
+              
+              Text(
+                appBarTitle,
+                style: const TextStyle(color: Colors.white),
+              ),
+            ],
           ),
+
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context), //takes us to the previous page 
+            icon: const Icon( Icons.arrow_back, color: Colors.white,),
+          ),
+          
+          actions: [
+            if (widget.isGroupChat)
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                tooltip: "Leave Group",
+                onPressed: _leaveGroup,
+              ),
+           ],
         ),
 
         body: Column(
           children: [
             Expanded(
               child: StreamBuilder(
-                stream: messageRef.snapshots(), 
+                stream: _chatControllers.messageStream(), 
                 builder: (context, snapshot){
                   if(!snapshot.hasData){
                     return const Center(child: CircularProgressIndicator());
@@ -162,7 +242,7 @@ class _ChatPageState extends State<ChatPage>{
                         );
                       }
 
-                      Widget bubble;
+                      Widget bubble = const SizedBox();
 
                       //Imported text bubbles
                       if(msg['mediaType'] == "" || msg['mediaType'] == null){
@@ -171,53 +251,113 @@ class _ChatPageState extends State<ChatPage>{
                           text: msg['text'] ?? "",
                           color: isMe ? const Color(0xFFD0F6C1) : const Color(0xFFFFD8DF),
                           textStyle: const TextStyle(fontSize: 16),
+                          tail: true,
                         );
                       }
 
                       //the image bubble
                       else if(msg['mediaType'] == "image"){
-                        bubble = BubbleNormalImage(
-                          id: msg['senderId'],
-                          image: Image.network(
-                            msg['mediaUrl'],
-                            width: 200,
-                            height: 200,
-                            fit: BoxFit.cover,
-                          ),
-                          color: Colors.transparent,
+                        bubble = FutureBuilder<Uint8List>(
+                          future: _chatControllers.mediaService.decrypt(msg['mediaUrl']),
+                          builder: (context, snap){
+                            if(!snap.hasData){
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                                );
+                            }
+                            return BubbleNormalImage(
+                              id: msg['senderId'],
+                              image: Image.memory(
+                                snap.data!,
+                                width: 150,
+                                height: 150,
+                                fit: BoxFit.cover,
+                              ),
+
+                              color: Colors.transparent,
+                            );
+                          },
                         );
                       }
 
                       //video bubble
                       else if(msg['mediaType'] == "video"){
-                        bubble = VideoBubble(
-                          videoUrl: msg['mediaUrl'], 
-                          isSender: isMe,
-                          );
-                      }else{
-                        bubble = const SizedBox.shrink();
-                      }
+                        bubble = FutureBuilder<Uint8List>(
+                          future: _chatControllers.mediaService.decrypt(msg['mediaUrl']),
+                          builder: (context, snap){
+                            if(!snap.hasData){
+                              return const Padding(
+                                padding: EdgeInsets.all(16),
+                                child: CircularProgressIndicator(),
+                              );
+                            }
 
-                      return Column(
-                        crossAxisAlignment: isMe ?
-                          CrossAxisAlignment.end : CrossAxisAlignment.start,
-                          children: [
-                            senderLabel,
-                            bubble,
-                          ],
+                            return VideoBubble(
+                              bytes: snap.data!,
+                              isSender: isMe,
+                            );
+                          },
+                        );
+                      }
+                      return FutureBuilder<String?>(
+                        future: _chatControllers.getPFP(msg['senderId']),
+                        builder: (context, snapshot){
+                          final profileUrl = snapshot.data;
+
+                          Widget avatar = isMe ? const SizedBox(width: 40)
+                            : CircleAvatar(
+                              radius: 16,
+                              backgroundImage: profileUrl!= null ? NetworkImage(profileUrl) : null,
+                              backgroundColor: Colors.grey[300],
+                              child: profileUrl == null ?
+                                const Icon(Icons.person, size: 18, color: Colors.white) : null,
+                          );
+
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: isMe ? MainAxisAlignment.end : MainAxisAlignment.start,
+                              children: [
+                                if(!isMe) avatar,
+
+                                Column(
+                                  crossAxisAlignment: isMe ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                                  children: [
+                                    senderLabel,
+                                    bubble,
+                                  ],
+                                ),
+
+                                if(isMe) const SizedBox(width: 40),
+                              ],
+                            ),
+                          );
+                        },
                       );
+                      // return Column(
+                      //   crossAxisAlignment: isMe ?
+                      //     CrossAxisAlignment.end : CrossAxisAlignment.start,
+                      //     children: [
+                      //       senderLabel,
+                      //       bubble,
+                      //     ],
+                      // );
                     },
                   );
                 },
               ),
             ),
+          ),
 
             //The message bar
             ClipRRect(
               borderRadius: BorderRadiusGeometry.circular(20),
               child: MessageBar(
-                onSend: (text) => _sendMessage(text: text),
+                onSend: (text) => _sendMessage(),
                 messageBarHintText: "Type a message...",
+                sendButtonColor: const Color(0xFFA5D6A7),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.image, color: Colors.grey),
@@ -230,9 +370,15 @@ class _ChatPageState extends State<ChatPage>{
                   ),
                 ],
                 ),
-              ),
-          ],
-        ),
-      );
+                IconButton(
+                  icon: const Icon(Icons.video_library, color: Colors.grey),
+                  onPressed: () => _pickMedia(false),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }

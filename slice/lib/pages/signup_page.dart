@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:slice/services/auth/auth_service.dart';
+import 'package:slice/auth/auth_service.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
@@ -14,58 +14,58 @@ class _SignUpPageState extends State<SignUpPage> {
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
 
-  void signup() async {
-    // authentication service
-    final authService = AuthService();
+  final _auth = AuthService();
 
-    if (_passwordController.text == _confirmPasswordController.text) {
-      try {
-        await authService.signUpWithEmailPassword(
-          _emailController.text,
-          _passwordController.text,
-          _usernameController.text,
-        );
-        if (mounted) Navigator.pop(context);
-      } catch (e) {
-        if (!mounted) return;
+  @override
+  void dispose() {
+    _usernameController.dispose();
+    _emailController.dispose();
+    _passwordController.dispose();
+    _confirmPasswordController.dispose();
+    super.dispose();
+  }
 
-        String message = "Signup failed";
+  _signup() async {
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text.trim();
+    final confirm = _confirmPasswordController.text.trim();
 
-        if (e.toString().contains('email-already-in-use')) {
-          message = "Email is already registered";
-        } else if (e.toString().contains('weak-password')) {
-          message = "Password is too weak";
-        } else if (e.toString().contains('invalid-email')) {
-          message = "Invalid email address";
-        }
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      debugPrint("Missing fields");
+      return;
+    }
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(message),
-            duration: Duration(seconds: 2),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+    if (password != confirm) {
+      debugPrint("Passwords do not match");
+      return;
+    }
+
+    final user = await _auth.signup(email, password);
+
+    if (user != null) {
+      debugPrint("Account created: ${user.email}");
+
+      // Navigate to login OR home — your choice
+      Navigator.pushReplacementNamed(context, '/login');
     } else {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Passwords do not match"),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
+      debugPrint("Signup failed");
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_new_rounded),
+          color: Colors.black87,
+          onPressed: () => Navigator.pop(context),
+        ),
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+      ),
       body: SafeArea(
-        top: false,
         child: Center(
           child: SingleChildScrollView(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 40),
@@ -88,27 +88,31 @@ class _SignUpPageState extends State<SignUpPage> {
                 const SizedBox(height: 20),
                 const Text(
                   'Create an account',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 const Text(
                   'Enter your information to sign up for this app',
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black54,
+                  ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
 
-                // Username
+                // Username 
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
                     hintText: 'Username',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -117,18 +121,15 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Email
+                // Email 
                 TextField(
                   controller: _emailController,
-                  keyboardType: TextInputType.emailAddress,
                   decoration: InputDecoration(
                     hintText: 'email@domain.com',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -137,7 +138,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Password
+                // Password 
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -145,10 +146,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     hintText: 'Password',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -165,10 +164,8 @@ class _SignUpPageState extends State<SignUpPage> {
                     hintText: 'Confirm Password',
                     filled: true,
                     fillColor: Colors.white,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                    contentPadding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -181,12 +178,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      debugPrint(
-                        'Username: ${_usernameController.text}, Email: ${_emailController.text}',
-                      );
-                      signup();
-                    },
+                    onPressed: _signup,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
                       foregroundColor: Colors.black,
@@ -197,17 +189,14 @@ class _SignUpPageState extends State<SignUpPage> {
                     ),
                     child: const Text(
                       'Sign Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style:
+                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
-                // Terms and Privacy text
                 const Text.rich(
                   TextSpan(
                     text: 'By clicking continue, you agree to our ',
@@ -216,23 +205,20 @@ class _SignUpPageState extends State<SignUpPage> {
                       TextSpan(
                         text: 'Terms of Service',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                       ),
                       TextSpan(text: ' and '),
                       TextSpan(
                         text: 'Privacy Policy',
                         style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
+                            fontWeight: FontWeight.bold,
+                            color: Colors.black),
                       ),
                     ],
                   ),
                   textAlign: TextAlign.center,
                 ),
-                //const SizedBox(height: 100),
               ],
             ),
           ),

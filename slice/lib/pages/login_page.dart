@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:slice/services/auth/auth_service.dart';
-import 'signup_page.dart'; // so we can navigate to your existing sign-up screen
+import 'package:slice/auth/auth_service.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -12,31 +11,26 @@ class LoginPage extends StatefulWidget {
 class _LoginPageState extends State<LoginPage> {
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
+    final _auth = AuthService();
 
-  void login() async {
-    // authentication service
-    final authService = AuthService();
+_login() async {
+  final email = _emailController.text.trim();
+  final password = _passwordController.text.trim();
 
-    try {
-      await authService.signInWithEmailPassword(
-        _emailController.text,
-        _passwordController.text,
-      );
-    } catch (e) {
-      debugPrint(e.toString());
+  final user = await _auth.login(email, password);
 
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Incorrect email or password"),
-          duration: Duration(seconds: 2),
-          backgroundColor: Colors.red,
-        ),
-      );
-      _emailController.clear();
-      _passwordController.clear();
-    }
+  if (user != null) {
+    Navigator.pushReplacementNamed(context, '/home');
+  } else {
+    debugPrint("Failed to login");
   }
+}
+@override
+void dispose() {
+  _emailController.dispose();
+  _passwordController.dispose();
+  super.dispose();
+}
 
   @override
   Widget build(BuildContext context) {
@@ -54,24 +48,18 @@ class _LoginPageState extends State<LoginPage> {
                   child: Image.asset('assets/slice_logo.jpeg', height: 100),
                 ),
                 const SizedBox(height: 10),
-                const Text(
-                  'Slice',
-                  style: TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    color: Colors.black,
-                  ),
-                ),
+                const Text('Slice',
+                    style: TextStyle(
+                        fontSize: 28,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black)),
                 const SizedBox(height: 20),
-                const Text(
-                  'Login',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
+                const Text('Login',
+                    style:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
                 const SizedBox(height: 4),
-                const Text(
-                  'Enter your email and password',
-                  style: TextStyle(fontSize: 14, color: Colors.black54),
-                ),
+                const Text('Enter your email and password',
+                    style: TextStyle(fontSize: 14, color: Colors.black54)),
                 const SizedBox(height: 30),
 
                 // email
@@ -82,9 +70,7 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                        horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -102,9 +88,7 @@ class _LoginPageState extends State<LoginPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 14,
-                    ),
+                        horizontal: 16, vertical: 14),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -117,48 +101,31 @@ class _LoginPageState extends State<LoginPage> {
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
-                    onPressed: () {
-                      //debugPrint('Login: ${_emailController.text}');
-                      login();
-                    },
+                    onPressed: _login,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text(
-                      'Continue',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Text('Continue',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
 
                 const SizedBox(height: 20),
 
                 // divider “or”
-                Row(
-                  children: const [
-                    Expanded(
-                      child: Divider(thickness: 1, color: Colors.black12),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 10),
-                      child: Text(
-                        'or',
-                        style: TextStyle(color: Colors.black45),
-                      ),
-                    ),
-                    Expanded(
-                      child: Divider(thickness: 1, color: Colors.black12),
-                    ),
-                  ],
-                ),
+                Row(children: const [
+                  Expanded(child: Divider(thickness: 1, color: Colors.black12)),
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10),
+                    child: Text('or', style: TextStyle(color: Colors.black45)),
+                  ),
+                  Expanded(child: Divider(thickness: 1, color: Colors.black12)),
+                ]),
                 const SizedBox(height: 20),
 
                 // sign up button
@@ -166,33 +133,20 @@ class _LoginPageState extends State<LoginPage> {
                   width: double.infinity,
                   child: ElevatedButton(
                     onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) {
-                            return SignUpPage();
-                          },
-                        ),
-                      );
+                      Navigator.pushNamed(context, '/signup');
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFFFFE5E5),
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                     ),
-                    child: const Text(
-                      'Sign Up',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                    child: const Text('Sign Up',
+                        style: TextStyle(
+                            fontSize: 16, fontWeight: FontWeight.bold)),
                   ),
                 ),
-
                 const SizedBox(height: 15),
 
                 // Google
@@ -207,8 +161,7 @@ class _LoginPageState extends State<LoginPage> {
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ),
@@ -226,8 +179,7 @@ class _LoginPageState extends State<LoginPage> {
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
+                          borderRadius: BorderRadius.circular(8)),
                     ),
                   ),
                 ),
@@ -239,20 +191,16 @@ class _LoginPageState extends State<LoginPage> {
                     style: TextStyle(fontSize: 12, color: Colors.black54),
                     children: [
                       TextSpan(
-                        text: 'Terms of Service',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+                          text: 'Terms of Service',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black)),
                       TextSpan(text: ' and '),
                       TextSpan(
-                        text: 'Privacy Policy',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.black,
-                        ),
-                      ),
+                          text: 'Privacy Policy',
+                          style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.black)),
                     ],
                   ),
                   textAlign: TextAlign.center,
@@ -265,3 +213,4 @@ class _LoginPageState extends State<LoginPage> {
     );
   }
 }
+
