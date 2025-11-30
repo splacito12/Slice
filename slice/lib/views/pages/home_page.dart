@@ -14,6 +14,88 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   final chatService = ChatService();
+  final myUid = FirebaseAuth.instance.currentUser!.uid;
+  final ValueNotifier<List<Map<String, dynamic>>> _sortedChats = ValueNotifier(
+    [],
+  );
+
+  @override
+  void initState() {
+    super.initState();
+    listenChats();
+  }
+
+  void listenChats() {
+    chatService.getFriendsList().listen((friends) {
+      updateChats(friends: friends);
+    });
+
+    chatService.getGroupChats().listen((groups) {
+      updateChats(groups: groups);
+    });
+  }
+
+  final Map<String, Map<String, dynamic>> _chatsMap = {};
+
+  void updateSortedChats() {
+    final chatList = _chatsMap.values.toList();
+    chatList.sort((chatA, chatB) {
+      final timeA =
+          chatA["lastMessageTime"] ?? DateTime.fromMillisecondsSinceEpoch(0);
+      final timeB =
+          chatB["lastMessageTime"] ?? DateTime.fromMillisecondsSinceEpoch(0);
+      return timeB.compareTo(timeA);
+    });
+    _sortedChats.value = chatList;
+  }
+
+  void updateChats({
+    List<Map<String, dynamic>>? friends,
+    List<Map<String, dynamic>>? groups,
+  }) {
+    if (friends != null) {
+      for (var f in friends) {
+        final uid = f["friendUid"];
+        final convoId = myUid.hashCode <= uid.hashCode
+            ? "${myUid}_$uid"
+            : "${uid}_$myUid";
+
+        if (!_chatsMap.containsKey(convoId)) {
+          _chatsMap[convoId] = {
+            "type": "friend",
+            "uid": uid,
+            "username": f["username"],
+            "profilePic": f["profilePic"],
+            "convoId": convoId,
+          };
+          chatService.getLastMessageTime(convoId).listen((time) {
+            _chatsMap[convoId]!["lastMessageTime"] = time;
+            updateSortedChats();
+          });
+        }
+      }
+    }
+
+    if (groups != null) {
+      for (var g in groups) {
+        final convoId = g["groupId"];
+        if (!_chatsMap.containsKey(convoId)) {
+          _chatsMap[convoId] = {
+            "type": "group",
+            "groupId": convoId,
+            "groupName": g["groupName"],
+            "members": (g["members"] as List).map((e) => e.toString()).toList(),
+            "convoId": convoId,
+          };
+          chatService.getLastMessageTime(convoId).listen((time) {
+            _chatsMap[convoId]!["lastMessageTime"] = time;
+            updateSortedChats();
+          });
+        }
+      }
+      updateSortedChats();
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -72,144 +154,101 @@ class _HomePageState extends State<HomePage> {
         ],
       ),
 
-      body: Column(
-        children: [
-          Expanded(
-            child: StreamBuilder<List<Map<String, dynamic>>>(
-              stream: chatService.getFriendsList(),
-              builder: (context, friendsSnap) {
-                return StreamBuilder<List<Map<String, dynamic>>>(
-                  stream: chatService.getGroupChats(),
-                  builder: (context, groupsSnap) {
-                    if (!friendsSnap.hasData || !groupsSnap.hasData) {
-                      return const Center(child: CircularProgressIndicator());
-                    }
+      body: ValueListenableBuilder<List<Map<String, dynamic>>>(
+        valueListenable: _sortedChats,
+        builder: (context, sortedChats, _) {
+          if (sortedChats.isEmpty) {
+            return const Center(child: Text("No chats yet"));
+          }
 
-                    final friends = friendsSnap.data!;
-                    final groups = groupsSnap.data!;
+          return ListView.separated(
+            itemCount: sortedChats.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 15),
+            itemBuilder: (context, index) {
+              final chat = sortedChats[index];
 
-                    final safeGroups = groups.map((g) {
-                      return {
-                        "type": "group",
-                        "groupId": g["groupId"],
-                        "groupName": g["groupName"],
-                        "members": (g["members"] as List<dynamic>)
-                            .map((e) => e.toString())
-                            .toList(),
-                      };
-                    }).toList();
+              if (chat["type"] == "friend") {
+                return ListTile(
+                  leading: CircleAvatar(
+                    radius: 30,
+                    backgroundImage:
+                        (chat["profilePic"] != null && chat["profilePic"] != '')
+                        ? NetworkImage(chat["profilePic"])
+                        : null,
+                    child:
+                        (chat["profilePic"] == null || chat["profilePic"] == '')
+                        ? const Icon(Icons.person)
+                        : null,
+                  ),
+                  title: Text(
+                    chat["username"],
+                    style: const TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  subtitle: chat["lastMessageTime"] != null
+                      ? Text(
+                          chatService.getFormattedTime(chat["lastMessageTime"]),
+                        )
+                      : const Text("No messages yet"),
+                  onTap: () {
+                    final friendUid = chat["uid"];
+                    final convoId = myUid.hashCode <= friendUid.hashCode
+                        ? "${myUid}_${friendUid}"
+                        : "${friendUid}_${myUid}";
 
-                    final allChats = [
-                      ...friends.map(
-                        (f) => {
-                          "type": "friend",
-                          "uid": f["friendUid"],
-                          "username": f["username"],
-                          "profilePic": f["profilePic"],
-                        },
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => ChatPage(
+                          convoId: convoId,
+                          currUserId: myUid,
+                          currUserName:
+                              FirebaseAuth.instance.currentUser!.displayName ??
+                              "You",
+                          chatPartnerId: friendUid,
+                          chatPartnerUsername: chat["username"],
+                          isGroupChat: false,
+                        ),
                       ),
-                      ...safeGroups,
-                    ];
-
-                    if (allChats.isEmpty) {
-                      return const Center(child: Text("No chats yet"));
-                    }
-
-                    return ListView.separated(
-                      itemCount: allChats.length,
-                      separatorBuilder: (_, __) => const SizedBox(height: 15),
-                      itemBuilder: (context, index) {
-                        final chat = allChats[index];
-
-                        if (chat["type"] == "friend") {
-                          return ListTile(
-                            leading: CircleAvatar(
-                              radius: 30,
-                              backgroundImage:
-                                  (chat["profilePic"] != null &&
-                                      chat["profilePic"] != '')
-                                  ? NetworkImage(chat["profilePic"])
-                                  : null,
-                              child:
-                                  (chat["profilePic"] == null ||
-                                      chat["profilePic"] == '')
-                                  ? const Icon(Icons.person)
-                                  : null,
-                            ),
-                            title: Text(
-                              chat["username"],
-                              style: const TextStyle(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            onTap: () {
-                              final friendUid = chat["uid"];
-                              final convoId =
-                                  myUid.hashCode <= friendUid.hashCode
-                                  ? "${myUid}_${friendUid}"
-                                  : "${friendUid}_${myUid}";
-
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder: (_) => ChatPage(
-                                    convoId: convoId,
-                                    currUserId: myUid,
-                                    currUserName:
-                                        FirebaseAuth
-                                            .instance
-                                            .currentUser!
-                                            .displayName ??
-                                        "You",
-                                    chatPartnerId: friendUid,
-                                    chatPartnerUsername: chat["username"],
-                                    isGroupChat: false,
-                                  ),
-                                ),
-                              );
-                            },
-                          );
-                        }
-
-                        return ListTile(
-                          leading: const CircleAvatar(
-                            radius: 30,
-                            child: Icon(Icons.group),
-                          ),
-                          title: Text(
-                            chat["groupName"],
-                            style: const TextStyle(fontWeight: FontWeight.w600),
-                          ),
-                          subtitle: Text("${chat["members"].length} members"),
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (_) => ChatPage(
-                                  convoId: chat["groupId"],
-                                  currUserId: myUid,
-                                  currUserName:
-                                      FirebaseAuth
-                                          .instance
-                                          .currentUser!
-                                          .displayName ??
-                                      "You",
-                                  isGroupChat: true,
-                                  groupName: chat["groupName"],
-                                  chatMembers: chat["members"],
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
                     );
                   },
                 );
-              },
-            ),
-          ),
-        ],
+              }
+
+              return ListTile(
+                leading: const CircleAvatar(
+                  radius: 30,
+                  child: Icon(Icons.group),
+                ),
+                title: Text(
+                  chat["groupName"],
+                  style: const TextStyle(fontWeight: FontWeight.w600),
+                ),
+                subtitle: chat["lastMessageTime"] != null
+                    ? Text(
+                        chatService.getFormattedTime(chat["lastMessageTime"]),
+                      )
+                    : const Text("No messages yet"),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => ChatPage(
+                        convoId: chat["groupId"],
+                        currUserId: myUid,
+                        currUserName:
+                            FirebaseAuth.instance.currentUser!.displayName ??
+                            "You",
+                        isGroupChat: true,
+                        groupName: chat["groupName"],
+                        chatMembers: chat["members"],
+                      ),
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
       ),
     );
   }
