@@ -18,21 +18,44 @@ class _SignUpPageState extends State<SignUpPage> {
     // authentication service
     final authService = AuthService();
 
-    if(_passwordController.text == _confirmPasswordController.text) {
+    if (_passwordController.text == _confirmPasswordController.text) {
       try {
         await authService.signUpWithEmailPassword(
           _emailController.text,
           _passwordController.text,
-          _usernameController.text
+          _usernameController.text,
         );
         if (mounted) Navigator.pop(context);
+      } catch (e) {
+        if (!mounted) return;
+
+        String message = "Signup failed";
+
+        if (e.toString().contains('email-already-in-use')) {
+          message = "Email is already registered";
+        } else if (e.toString().contains('weak-password')) {
+          message = "Password is too weak";
+        } else if (e.toString().contains('invalid-email')) {
+          message = "Invalid email address";
+        }
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(message),
+            duration: Duration(seconds: 2),
+            backgroundColor: Colors.red,
+          ),
+        );
       }
-      catch (e) {
-        debugPrint(e.toString());
-      }
-    }
-    else {
-      debugPrint("Passwords don't match");
+    } else {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Passwords do not match"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -65,23 +88,17 @@ class _SignUpPageState extends State<SignUpPage> {
                 const SizedBox(height: 20),
                 const Text(
                   'Create an account',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 4),
                 const Text(
                   'Enter your information to sign up for this app',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black54,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.black54),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 30),
 
-                // Username 
+                // Username
                 TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
@@ -89,7 +106,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -98,7 +117,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Email 
+                // Email
                 TextField(
                   controller: _emailController,
                   keyboardType: TextInputType.emailAddress,
@@ -107,7 +126,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -116,7 +137,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Password 
+                // Password
                 TextField(
                   controller: _passwordController,
                   obscureText: true,
@@ -125,7 +146,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -134,7 +157,7 @@ class _SignUpPageState extends State<SignUpPage> {
                 ),
                 const SizedBox(height: 15),
 
-                // Confirm Password 
+                // Confirm Password
                 TextField(
                   controller: _confirmPasswordController,
                   obscureText: true,
@@ -143,7 +166,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     filled: true,
                     fillColor: Colors.white,
                     contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, vertical: 14),
+                      horizontal: 16,
+                      vertical: 14,
+                    ),
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(8),
                       borderSide: const BorderSide(color: Colors.black12),
@@ -158,20 +183,24 @@ class _SignUpPageState extends State<SignUpPage> {
                   child: ElevatedButton(
                     onPressed: () {
                       debugPrint(
-                          'Username: ${_usernameController.text}, Email: ${_emailController.text}');
-                          signup();
+                        'Username: ${_usernameController.text}, Email: ${_emailController.text}',
+                      );
+                      signup();
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF9BE69D),
                       foregroundColor: Colors.black,
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(8)),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
                     ),
                     child: const Text(
                       'Sign Up',
-                      style:
-                          TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                 ),
@@ -187,13 +216,17 @@ class _SignUpPageState extends State<SignUpPage> {
                       TextSpan(
                         text: 'Terms of Service',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
                       TextSpan(text: ' and '),
                       TextSpan(
                         text: 'Privacy Policy',
                         style: TextStyle(
-                            fontWeight: FontWeight.bold, color: Colors.black),
+                          fontWeight: FontWeight.bold,
+                          color: Colors.black,
+                        ),
                       ),
                     ],
                   ),

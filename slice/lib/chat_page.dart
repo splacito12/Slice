@@ -54,6 +54,16 @@ class _ChatPageState extends State<ChatPage> {
     _mediaService = widget.mediaService ?? MediaService();
     _messageService = widget.messageService ?? MessageService();
     _firebaseFirestore = widget.firestore ?? FirebaseFirestore.instance;
+    markAsRead();
+  }
+
+  void markAsRead() {
+  FirebaseFirestore.instance
+      .collection('chats')
+      .doc(widget.convoId)
+      .collection('readStatus')
+      .doc(widget.currUserId)
+      .set({'lastRead': DateTime.now()}, SetOptions(merge: true));
   }
 
   // ------------------------------
