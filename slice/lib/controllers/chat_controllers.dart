@@ -47,6 +47,17 @@ class ChatControllers {
       .collection('chats')
       .doc(convoId)
       .get();
+
+    //check if the document exists
+    if(!chatDoc.exists){
+      throw Exception("Chat document '$convoId' does NOT exist in Firestore.");
+    }
+
+    final data = chatDoc.data();
+    if(data == null || !data.containsKey('mediaKey')){
+      throw Exception("Chat '$convoId' is missing 'mediaKey' field.");
+    }
+    
     final mediaKey = chatDoc['mediaKey'];
 
     _encryptService = EncryptService(mediaKey);

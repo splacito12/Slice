@@ -125,13 +125,13 @@ class _ChatPageState extends State<ChatPage> {
   // ------------------------------
 
   //message
-  Future<void> _sendMessage() async{
-    final text = _textEditingController.text.trim();
-    if(text.isEmpty){
+  Future<void> _sendMessage(String text) async{
+    final cleaned = text.trim();
+    if(cleaned.isEmpty){
       return;
     }
 
-    await _chatControllers.sendMessage(text: text);
+    await _chatControllers.sendMessage(text: cleaned);
     _textEditingController.clear();
 
     Future.delayed(const Duration(milliseconds: 250), (){
@@ -168,7 +168,7 @@ class _ChatPageState extends State<ChatPage> {
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
-          backgroundColor: const Color(0xFFCEF7B4),
+          backgroundColor: const Color.fromARGB(255, 151, 193, 125),
           
           title: Row(
             children: [
@@ -187,7 +187,7 @@ class _ChatPageState extends State<ChatPage> {
               
               Text(
                 appBarTitle,
-                style: const TextStyle(color: Colors.white),
+                style: const TextStyle(color: Colors.white,),
               ),
             ],
           ),
@@ -347,9 +347,9 @@ class _ChatPageState extends State<ChatPage> {
               borderRadius: BorderRadius.circular(20),
 
               child: MessageBar(
-                onSend: (text) => _sendMessage(),
+                onSend: (text) => _sendMessage(text),
                 messageBarHintText: "Type a message...",
-                sendButtonColor: const Color(0xFFA5D6A7),
+                sendButtonColor: const Color.fromARGB(255, 71, 133, 73),
                 actions: [
                   IconButton(
                     icon: const Icon(Icons.image, color: Colors.grey),

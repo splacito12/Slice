@@ -4,6 +4,8 @@ import 'package:slice/chat_page.dart';
 import 'package:slice/views/pages/addfriend_page.dart';
 import 'package:slice/views/pages/creategroup_page.dart';
 import 'package:slice/services/chat/chat_service.dart';
+import 'package:slice/services/chat/OneToOne_chat.dart';
+
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -256,18 +258,19 @@ class _HomePageState extends State<HomePage> {
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  onTap: () {
+                  onTap: () async{
 
                     final friendUid = chat["uid"];
-                    final convoId = myUid.hashCode <= friendUid.hashCode
-                        ? "${myUid}_${friendUid}"
-                        : "${friendUid}_${myUid}";
+                    final chatId = await OneToOneChat().directChat(myUid, friendUid);
+                    // final convoId = myUid.hashCode <= friendUid.hashCode
+                    //     ? "${myUid}_${friendUid}"
+                    //     : "${friendUid}_${myUid}";
 
                     Navigator.push(
                       context,
                       MaterialPageRoute(
                         builder: (_) => ChatPage(
-                          convoId: convoId,
+                          convoId: chatId,
                           currUserId: myUid,
                           currUserName:
                               FirebaseAuth.instance.currentUser!.displayName ??
