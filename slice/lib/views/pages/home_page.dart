@@ -72,8 +72,14 @@ class _HomePageState extends State<HomePage> {
             _chatsMap[convoId]!["lastMessageTime"] = time;
             updateSortedChats();
           });
-          chatService.getLastMessage(convoId).listen((text) {
-            _chatsMap[convoId]!["lastMessage"] = text ?? "No message yet";
+          chatService.getLastMessage(convoId).listen((message) {
+            if (message != null) {
+              _chatsMap[convoId]!["lastMessage"] = message['text'];
+              _chatsMap[convoId]!["lastSenderId"] = message['senderId'];
+            }
+          });
+          chatService.getLastReadTime(convoId, myUid).listen((readTime) {
+            _chatsMap[convoId]!["lastReadTime_$myUid"] = readTime;
             updateSortedChats();
           });
         }
@@ -95,14 +101,33 @@ class _HomePageState extends State<HomePage> {
             _chatsMap[convoId]!["lastMessageTime"] = time;
             updateSortedChats();
           });
-          chatService.getLastMessage(convoId).listen((text) {
-            _chatsMap[convoId]!["lastMessage"] = text ?? "No message yet";
+          chatService.getLastMessage(convoId).listen((message) {
+            if (message != null) {
+              _chatsMap[convoId]!["lastMessage"] = message['text'];
+              _chatsMap[convoId]!["lastSenderId"] = message['senderId'];
+            }
+            updateSortedChats();
+          });
+          chatService.getLastReadTime(convoId, myUid).listen((readTime) {
+            _chatsMap[convoId]!["lastReadTime_$myUid"] = readTime;
             updateSortedChats();
           });
         }
       }
     }
   }
+
+  bool isUnread(Map<String, dynamic> chat, String myUid) {
+  final lastMessageTime = chat["lastMessageTime"];
+  final lastReadTime = chat["lastReadTime_$myUid"];
+  final lastSenderId = chat["lastSenderId"];
+
+  if (lastMessageTime == null) return false;
+  if (lastSenderId == myUid) return false;
+  if (lastReadTime == null) return true;
+
+  return lastMessageTime.isAfter(lastReadTime);
+}
 
   @override
   Widget build(BuildContext context) {
@@ -176,16 +201,35 @@ class _HomePageState extends State<HomePage> {
 
               if (chat["type"] == "friend") {
                 return ListTile(
-                  leading: CircleAvatar(
-                    radius: 30,
-                    backgroundImage:
-                        (chat["profilePic"] != null && chat["profilePic"] != '')
-                        ? NetworkImage(chat["profilePic"])
-                        : null,
-                    child:
-                        (chat["profilePic"] == null || chat["profilePic"] == '')
-                        ? const Icon(Icons.person)
-                        : null,
+                  leading: Stack(
+                    children: [
+                      CircleAvatar(
+                        radius: 30,
+                        backgroundImage:
+                            (chat["profilePic"] != null &&
+                                chat["profilePic"] != '')
+                            ? NetworkImage(chat["profilePic"])
+                            : null,
+                        child:
+                            (chat["profilePic"] == null ||
+                                chat["profilePic"] == '')
+                            ? const Icon(Icons.person)
+                            : null,
+                      ),
+                      if (isUnread(chat, myUid))
+                        Positioned(
+                          left: 5,
+                          top: 5,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              shape: BoxShape.circle,
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
                   title: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -194,22 +238,26 @@ class _HomePageState extends State<HomePage> {
                         child: Text(
                           chat["username"],
                           style: const TextStyle(fontWeight: FontWeight.w600),
-                          overflow:  TextOverflow.ellipsis,
+                          overflow: TextOverflow.ellipsis,
                         ),
                       ),
                       if (chat["lastMessageTime"] != null)
                         Text(
                           chatService.getFormattedTime(chat["lastMessageTime"]),
-                          style: const TextStyle(fontSize: 12, color: Colors.grey)
-                        )
+                          style: const TextStyle(
+                            fontSize: 12,
+                            color: Colors.grey,
+                          ),
+                        ),
                     ],
                   ),
                   subtitle: Text(
-                          chat["lastMessage"] ?? "No messages yet",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis
-                        ),
+                    chat["lastMessage"] ?? "No messages yet",
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
                   onTap: () {
+
                     final friendUid = chat["uid"];
                     final convoId = myUid.hashCode <= friendUid.hashCode
                         ? "${myUid}_${friendUid}"
@@ -235,32 +283,49 @@ class _HomePageState extends State<HomePage> {
               }
 
               return ListTile(
-                leading: const CircleAvatar(
-                  radius: 30,
-                  child: Icon(Icons.group),
-                ),
-                title: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          chat["groupName"],
-                          style: const TextStyle(fontWeight: FontWeight.w600),
-                          overflow:  TextOverflow.ellipsis,
+                leading: Stack(
+                  children: [
+                    const CircleAvatar(radius: 30, child: Icon(Icons.group)),
+                    if (isUnread(chat, myUid))
+                      Positioned(
+                        left: 5,
+                        top: 5,
+                        child: Container(
+                          width: 12,
+                          height: 12,
+                          decoration: BoxDecoration(
+                            color: Colors.red,
+                            shape: BoxShape.circle,
+                          ),
                         ),
                       ),
-                      if (chat["lastMessageTime"] != null)
-                        Text(
-                          chatService.getFormattedTime(chat["lastMessageTime"]),
-                          style: const TextStyle(fontSize: 12, color: Colors.grey)
-                        )
-                    ],
-                  ),
-                  subtitle: Text(
-                          chat["lastMessage"] ?? "No messages yet",
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis
+                  ],
+                ),
+                title: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Expanded(
+                      child: Text(
+                        chat["groupName"],
+                        style: const TextStyle(fontWeight: FontWeight.w600),
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (chat["lastMessageTime"] != null)
+                      Text(
+                        chatService.getFormattedTime(chat["lastMessageTime"]),
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Colors.grey,
                         ),
+                      ),
+                  ],
+                ),
+                subtitle: Text(
+                  chat["lastMessage"] ?? "No messages yet",
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
                 onTap: () {
                   Navigator.push(
                     context,

@@ -74,7 +74,7 @@ class ChatService {
     }
   }
 
-  Stream<String?> getLastMessage(String convoId) {
+  Stream<Map<String, dynamic>?> getLastMessage(String convoId) {
     return _firestore
       .collection('chats')
       .doc(convoId)
@@ -84,9 +84,28 @@ class ChatService {
       .snapshots()
       .map((snapshot) {
         if (snapshot.docs.isNotEmpty) {
-          return snapshot.docs.first.data()['text'] as String?;
+          final data = snapshot.docs.first.data();
+          return {
+            'text': data['text'],
+            'senderId': data ['senderId'],
+          };
         }
         return null;
       }); 
   }
+
+  Stream<DateTime?> getLastReadTime(String convoId, String userId) {
+  return _firestore
+      .collection('chats')
+      .doc(convoId)
+      .collection('readStatus')
+      .doc(userId)
+      .snapshots()
+      .map((snapshot) {
+        if (snapshot.exists && snapshot.data()!['lastRead'] != null) {
+          return (snapshot.data()!['lastRead'] as Timestamp).toDate();
+        }
+        return null;
+      });
+}
 }
