@@ -30,12 +30,23 @@ class _AddFriendPageState extends State<AddFriendPage> {
     try {
       await friendService.sendFriendRequest(targetEmail);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Friend request sent!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Friend request sent!"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
       _friendEmailController.clear();
     } catch (e) {
-      debugPrint(e.toString());
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(e.toString()),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
@@ -47,9 +58,13 @@ class _AddFriendPageState extends State<AddFriendPage> {
         FirebaseAuth.instance.currentUser!.uid,
       );
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Friend request accepted!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Friend request accepted!"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -59,9 +74,13 @@ class _AddFriendPageState extends State<AddFriendPage> {
     try {
       await friendService.rejectFriendRequest(requestId);
       if (!mounted) return;
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Friend request rejected!")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Friend request rejected!"),
+          duration: Duration(seconds: 2),
+          backgroundColor: Colors.green,
+        ),
+      );
     } catch (e) {
       debugPrint(e.toString());
     }
@@ -149,10 +168,13 @@ class _AddFriendPageState extends State<AddFriendPage> {
                       return Card(
                         child: ListTile(
                           leading: CircleAvatar(
-                            backgroundImage: profilePic != null && profilePic != ''
-                            ? NetworkImage(profilePic) 
-                            : const AssetImage('assets/default_profile.png')
-                            ),
+                            backgroundImage:
+                                profilePic != null && profilePic != ''
+                                ? NetworkImage(profilePic)
+                                : const AssetImage(
+                                    'assets/default_profile.png',
+                                  ),
+                          ),
                           title: Text(fromUsername),
                           trailing: Row(
                             mainAxisSize: MainAxisSize.min,
