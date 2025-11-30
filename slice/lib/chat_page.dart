@@ -3,7 +3,6 @@ import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-
 import 'package:slice/widgets/video_bubble.dart';
 import 'package:slice/services/media_service.dart';
 import 'package:slice/services/message_service.dart';
@@ -14,11 +13,10 @@ class ChatPage extends StatefulWidget{
   final String convoId;
   final String currUserId;
   final String currUserName;
-  final String? chatPartnerId; //for 1-1
-  final bool isGroupChat; //for group chats
+  final String? chatPartnerId;
+  final bool isGroupChat;
   final String? groupName;
   final List<String>? chatMembers;
-
 
   final MediaService? mediaService;
   final MessageService? messageService;
@@ -42,7 +40,7 @@ class ChatPage extends StatefulWidget{
   State<ChatPage> createState() => _ChatPageState();
 }
 
-class _ChatPageState extends State<ChatPage>{
+class _ChatPageState extends State<ChatPage> {
   final ScrollController _scrollController = ScrollController();
   final TextEditingController _textEditingController = TextEditingController();
 
@@ -50,11 +48,9 @@ class _ChatPageState extends State<ChatPage>{
   String? partnerPfp;
   String? chatPartnerUsername;
 
-  //initstate so that its easier to use mock tests
   @override
-  void initState(){
+  void initState() {
     super.initState();
-
     
     _chatControllers = ChatControllers(
       convoId: widget.convoId,
@@ -79,8 +75,54 @@ class _ChatPageState extends State<ChatPage>{
       partnerPfp = await _chatControllers.getPFP(widget.chatPartnerId!);
       chatPartnerUsername = await _chatControllers.retrieveUsername(widget.chatPartnerId!);
     }
-    setState(() {});
+      setState(() {});
   }
+
+  void markAsRead() {
+  FirebaseFirestore.instance
+      .collection('chats')
+      .doc(widget.convoId)
+      .collection('readStatus')
+      .doc(widget.currUserId)
+      .set({'lastRead': DateTime.now()}, SetOptions(merge: true));
+  }
+
+  // ------------------------------
+  //       LEAVE GROUP
+  // ------------------------------
+  Future<void> _leaveGroup() async {
+    final confirm = await showDialog(
+      context: context,
+      builder: (_) => AlertDialog(
+        title: const Text("Leave Group"),
+        content: const Text("Are you sure you want to leave this group?"),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(context, false),
+              child: const Text("Cancel")),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text("Leave", style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm == true) {
+      await FirebaseFirestore.instance
+          .collection("chats")
+          .doc(widget.convoId)
+          .update({
+        "members": FieldValue.arrayRemove([widget.currUserId])
+      });
+
+      if (mounted) Navigator.pop(context);
+    }
+  }
+
+  // ------------------------------
+  //       SEND MESSAGE
+  // ------------------------------
 
   //message
   Future<void> _sendMessage() async{
@@ -106,7 +148,6 @@ class _ChatPageState extends State<ChatPage>{
     });
   }
 
-  //here will go all the design of the chat page
   @override
   Widget build(BuildContext context){
     if(!_chatControllers.initialized){
@@ -127,6 +168,8 @@ class _ChatPageState extends State<ChatPage>{
       return Scaffold(
         backgroundColor: const Color.fromARGB(255, 233, 250, 221),
         appBar: AppBar(
+          backgroundColor: const Color(0xFFCEF7B4),
+          
           title: Row(
             children: [
               if(!widget.isGroupChat)
@@ -135,10 +178,13 @@ class _ChatPageState extends State<ChatPage>{
                   backgroundImage: partnerPfp != null ?
                     NetworkImage(partnerPfp!) : null,
                   backgroundColor: Colors.grey[300],
-                  child: partnerPfp == null ? const Icon(Icons.person, color: Colors.white) : null,
+                  child: partnerPfp == null 
+                    ? const Icon(Icons.person, color: Colors.white) 
+                    : null,
                 ),
 
               const SizedBox(width: 10),
+              
               Text(
                 appBarTitle,
                 style: const TextStyle(color: Colors.white),
@@ -146,10 +192,19 @@ class _ChatPageState extends State<ChatPage>{
             ],
           ),
 
-          backgroundColor: const Color(0xFFCEF7B4),
-          leading: IconButton(onPressed: () => Navigator.pop(context), //takes us to the previous page 
-          icon: const Icon( Icons.arrow_back, color: Colors.white,),
+          leading: IconButton(
+            onPressed: () => Navigator.pop(context), //takes us to the previous page 
+            icon: const Icon( Icons.arrow_back, color: Colors.white,),
           ),
+          
+          actions: [
+            if (widget.isGroupChat)
+              IconButton(
+                icon: const Icon(Icons.logout, color: Colors.white),
+                tooltip: "Leave Group",
+                onPressed: _leaveGroup,
+              ),
+           ],
         ),
 
         body: Column(
@@ -294,6 +349,7 @@ class _ChatPageState extends State<ChatPage>{
                 },
               ),
             ),
+          ),
 
             //The message bar
             ClipRRect(
@@ -314,9 +370,15 @@ class _ChatPageState extends State<ChatPage>{
                   ),
                 ],
                 ),
-              ),
-          ],
-        ),
-      );
+                IconButton(
+                  icon: const Icon(Icons.video_library, color: Colors.grey),
+                  onPressed: () => _pickMedia(false),
+                ),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
