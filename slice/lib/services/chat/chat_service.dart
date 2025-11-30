@@ -6,13 +6,6 @@ class ChatService {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // get user stream
-  // Stream<List<Map<String,dynamic>>> getUserStream() {
-  //   return _firestore.collection("Users").snapshots().map(snapshot) {
-
-  //   }
-  // }
-
   Stream<List<Map<String, dynamic>>> getFriendsList() {
     String currentUid = _auth.currentUser!.uid;
     return _firestore
@@ -79,5 +72,21 @@ class ChatService {
     } else {
       return "${time.month}/${time.day}/${time.year}";
     }
+  }
+
+  Stream<String?> getLastMessage(String convoId) {
+    return _firestore
+      .collection('chats')
+      .doc(convoId)
+      .collection('messages')
+      .orderBy('timestamp', descending: true)
+      .limit(1)
+      .snapshots()
+      .map((snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          return snapshot.docs.first.data()['text'] as String?;
+        }
+        return null;
+      }); 
   }
 }

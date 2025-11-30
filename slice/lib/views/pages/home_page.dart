@@ -72,6 +72,10 @@ class _HomePageState extends State<HomePage> {
             _chatsMap[convoId]!["lastMessageTime"] = time;
             updateSortedChats();
           });
+          chatService.getLastMessage(convoId).listen((text) {
+            _chatsMap[convoId]!["lastMessage"] = text ?? "No message yet";
+            updateSortedChats();
+          });
         }
       }
     }
@@ -91,9 +95,12 @@ class _HomePageState extends State<HomePage> {
             _chatsMap[convoId]!["lastMessageTime"] = time;
             updateSortedChats();
           });
+          chatService.getLastMessage(convoId).listen((text) {
+            _chatsMap[convoId]!["lastMessage"] = text ?? "No message yet";
+            updateSortedChats();
+          });
         }
       }
-      updateSortedChats();
     }
   }
 
@@ -180,15 +187,28 @@ class _HomePageState extends State<HomePage> {
                         ? const Icon(Icons.person)
                         : null,
                   ),
-                  title: Text(
-                    chat["username"],
-                    style: const TextStyle(fontWeight: FontWeight.w600),
-                  ),
-                  subtitle: chat["lastMessageTime"] != null
-                      ? Text(
+                  title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          chat["username"],
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          overflow:  TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (chat["lastMessageTime"] != null)
+                        Text(
                           chatService.getFormattedTime(chat["lastMessageTime"]),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey)
                         )
-                      : const Text("No messages yet"),
+                    ],
+                  ),
+                  subtitle: Text(
+                          chat["lastMessage"] ?? "No messages yet",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis
+                        ),
                   onTap: () {
                     final friendUid = chat["uid"];
                     final convoId = myUid.hashCode <= friendUid.hashCode
@@ -219,15 +239,28 @@ class _HomePageState extends State<HomePage> {
                   radius: 30,
                   child: Icon(Icons.group),
                 ),
-                title: Text(
-                  chat["groupName"],
-                  style: const TextStyle(fontWeight: FontWeight.w600),
-                ),
-                subtitle: chat["lastMessageTime"] != null
-                    ? Text(
-                        chatService.getFormattedTime(chat["lastMessageTime"]),
-                      )
-                    : const Text("No messages yet"),
+                title: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          chat["groupName"],
+                          style: const TextStyle(fontWeight: FontWeight.w600),
+                          overflow:  TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (chat["lastMessageTime"] != null)
+                        Text(
+                          chatService.getFormattedTime(chat["lastMessageTime"]),
+                          style: const TextStyle(fontSize: 12, color: Colors.grey)
+                        )
+                    ],
+                  ),
+                  subtitle: Text(
+                          chat["lastMessage"] ?? "No messages yet",
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis
+                        ),
                 onTap: () {
                   Navigator.push(
                     context,
