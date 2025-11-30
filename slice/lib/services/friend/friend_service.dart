@@ -25,15 +25,15 @@ class FriendService {
     String myUid = _auth.currentUser!.uid;
     String? targetUid = await findUserByEmail(targetEmail);
 
-    if (targetUid == null) throw Exception("User not found");
-    if (myUid == targetUid) throw Exception("Cannot send yourself a request");
+    if (targetUid == null) throw "User not found";
+    if (myUid == targetUid) throw "Cannot send yourself a request";
 
     final requestId = '${myUid}_$targetUid';
     final existingRequest = await _firestore
         .collection('friend_requests')
         .doc(requestId)
         .get();
-    if (existingRequest.exists) throw Exception("Friend request already sent");
+    if (existingRequest.exists) throw "Friend request already sent";
 
     final alreadyFriends = await _firestore
         .collection('users')
@@ -41,7 +41,7 @@ class FriendService {
         .collection('friends')
         .doc(targetUid)
         .get();
-    if (alreadyFriends.exists) throw Exception("This user is already your friend");
+    if (alreadyFriends.exists) throw "This user is already your friend";
 
     final myAccount = await _firestore.collection('users').doc(myUid).get();
 
