@@ -3,9 +3,12 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:slice/services/auth/auth_service.dart';
 import 'package:slice/data/notifiers.dart';
+import 'package:slice/services/profile/profile_service.dart';
 
 class ProfilePage extends StatelessWidget {
-  const ProfilePage({super.key});
+  ProfilePage({super.key});
+
+  final ProfileService profileService = ProfileService();
 
   void logOut() {
     final _auth = AuthService();
@@ -38,7 +41,7 @@ class ProfilePage extends StatelessWidget {
     final uid = user.uid;
 
     return Scaffold(
-      backgroundColor: const Color(0xFFF6FFF5),
+      backgroundColor: const Color.fromARGB(255, 245, 245, 255),
 
       appBar: AppBar(
         backgroundColor: const Color(0xFFF6FFF5),
@@ -49,9 +52,36 @@ class ProfilePage extends StatelessWidget {
         ),
       ),
 
-      body: Column(
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('users')
+            .doc(user!.uid)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (!snapshot.hasData) {
+            return const Center(child: CircularProgressIndicator());
+          }
+
+          var userData = snapshot.data!.data() as Map<String, dynamic>;
+
+          return Center(
+            child: Column(
         children: [
           const SizedBox(height: 20),
+
+          InkWell(
+                  onTap: () async {
+                    await profileService.uploadProfilePic();
+                  },
+                  child: CircleAvatar(
+                    radius: 80,
+                    child:
+                        (userData['profilePic'] != null &&
+                            userData['profilePic'] != ''
+                        ? NetworkImage(userData['profilePic'])
+                        : const Icon(Icons.person, size: 70),)
+                  ),
+                ),
 
           CircleAvatar(
             backgroundColor: Colors.blue,
@@ -141,4 +171,4 @@ class ProfilePage extends StatelessWidget {
       ),
     );
   }
-}
+));}
