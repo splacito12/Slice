@@ -76,6 +76,7 @@ class _ChatPageState extends State<ChatPage> {
       chatPartnerUsername = await _chatControllers.retrieveUsername(widget.chatPartnerId!);
     }
       setState(() {});
+      markAsRead();
   }
 
   void markAsRead() {
