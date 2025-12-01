@@ -15,32 +15,41 @@ class OneToOneChat {
 
 
   Future<String> directChat(String user1, String user2) async{
-    final snapshot = await _firebaseFirestore
-      .collection('chats')
-      .where('isGroup', isEqualTo: false)
-      .where('members', arrayContains: user1)
-      .get();
+    // final snapshot = await _firebaseFirestore
+    //   .collection('chats')
+    //   .where('isGroup', isEqualTo: false)
+    //   .where('members', arrayContains: user1)
+    //   .get();
 
-    for(final doc in snapshot.docs){
-      final members = List<String>.from(doc['members']);
+    // for(final doc in snapshot.docs){
+    //   final members = List<String>.from(doc['members']);
 
-      if(members.contains(user2)){
-        return doc.id;
-      }
+    //   if(members.contains(user2)){
+    //     return doc.id;
+    //   }
+    // }
+    final convoId = user1.hashCode <= user2.hashCode
+      ? "${user1}_$user2"
+      : "${user2}_$user1";
+
+    final doc = await _firebaseFirestore.collection('chats').doc(convoId).get();
+
+    if (doc.exists) {
+      return convoId;
     }
 
     //create chat
-    final chatId = _firebaseFirestore.collection('chats').doc().id;
+    //final chatId = _firebaseFirestore.collection('chats').doc().id;
     final mediaKey = _keyGenerator();
 
-    await _firebaseFirestore.collection('chats').doc(chatId).set({
+    await _firebaseFirestore.collection('chats').doc(convoId).set({
       'isGroup': false,
       'members': [user1, user2],
       'mediaKey': mediaKey,
       'createdAt': FieldValue.serverTimestamp(),
     });
 
-    return chatId;
+    return convoId;
   }
 
   //get the media key
