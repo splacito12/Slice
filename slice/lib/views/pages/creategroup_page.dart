@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:slice/services/keys_generate.dart';
 import '../../services/chat/chat_service.dart';
 
 class CreateGroupPage extends StatefulWidget {
@@ -126,6 +127,7 @@ class _CreateGroupPageState extends State<CreateGroupPage> {
                   "groupName": _nameController.text.trim(),
                   "members": allMembers,
                   "createdBy": myUid,
+                  "mediaKey": generateMediaKey(),
                   "createdAt": FieldValue.serverTimestamp(),
                 });
 
