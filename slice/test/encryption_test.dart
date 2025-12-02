@@ -36,7 +36,7 @@ void main() {
       expect(decryptedText, equals(originalText));
     });
 
-    // --- Test Case 3: Error Handling (Short Data) ---
+    // --- Test Case 2: Error Handling (Short Data) ---
     test('Should throw an error if decrypting data that is too short (missing IV)', () {
       final shortData = Uint8List.fromList([1, 2, 3, 4, 5]);
 
