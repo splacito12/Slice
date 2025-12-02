@@ -1,3 +1,4 @@
+import 'dart:typed_data';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chat_bubbles/chat_bubbles.dart';
 import 'package:flutter/material.dart';
@@ -8,6 +9,7 @@ import 'package:slice/services/media_service.dart';
 import 'package:slice/services/message_service.dart';
 import 'package:slice/services/encryption _service.dart';
 import 'package:slice/controllers/chat_controllers.dart';
+import 'package:slice/services/key_exchange_service.dart'; 
 
 class ChatPage extends StatefulWidget{
   final String convoId;
@@ -48,9 +50,15 @@ class _ChatPageState extends State<ChatPage> {
   String? partnerPfp;
   String? chatPartnerUsername;
 
+  EncryptService? _encryptService;
+  final KeyExchangeService _keyExchangeService = KeyExchangeService();
+  bool _isEncryptionReady = false;
+
   @override
   void initState() {
     super.initState();
+
+    _initEncryption(); 
     
     _chatControllers = ChatControllers(
       convoId: widget.convoId,
@@ -66,6 +74,23 @@ class _ChatPageState extends State<ChatPage> {
       );
     _initControllers();
 
+  }
+
+   Future<void> _initEncryption() async {
+    // 1. Try to get the specific key for THIS conversation ID from secure storage
+    String? secretKey = await _keyExchangeService.getSecretKey(widget.convoId);
+
+    // 2. If key exists, initialize the encryptor
+    if (secretKey != null) {
+      setState(() {
+        _encryptService = EncryptService(secretKey);
+        _isEncryptionReady = true;
+      });
+    } else {
+      print("⚠️ No encryption key found for this chat. Messages will be sent as plain text or encryption will fail.");
+      // In a real app, you would trigger the 'Key Exchange Handshake' here
+      // or show a warning dialog.
+    }
   }
 
   Future<void> _initControllers() async{
@@ -132,7 +157,21 @@ class _ChatPageState extends State<ChatPage> {
       return;
     }
 
-    await _chatControllers.sendMessage(text: cleaned);
+    String textToSend = cleaned;
+    
+    if (_isEncryptionReady && _encryptService != null) {
+      try {
+        textToSend = _encryptService!.encryptText(cleaned);
+      } catch (e) {
+        print("Encryption Error: $e");
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text("Encryption failed. Message not sent."))
+        );
+        return; 
+      }
+    }
+
+    await _chatControllers.sendMessage(text: textToSend);
     _textEditingController.clear();
 
     Future.delayed(const Duration(milliseconds: 250), (){
@@ -247,9 +286,23 @@ class _ChatPageState extends State<ChatPage> {
 
                       //Imported text bubbles
                       if(msg['mediaType'] == "" || msg['mediaType'] == null){
+                        String displayText = msg['text'] ?? "";
+
+                        // LOGIC: Attempt to decrypt
+                        if (_isEncryptionReady && _encryptService != null) {
+                          try {
+                            // We try to decrypt. If the message is old (plain text), 
+                            // this might throw an error, so we catch it.
+                            displayText = _encryptService!.decryptText(displayText);
+                          } catch (e) {
+                            // If decryption fails, we assume the message was never encrypted 
+                            // (legacy message) and just show it as is.
+                            print("Decryption skipped: $e"); 
+                          }
+                        }
                         bubble = BubbleSpecialOne(
                           isSender: isMe,
-                          text: msg['text'] ?? "",
+                          text: displayText,
                           color: isMe ? const Color(0xFFD0F6C1) : const Color(0xFFFFD8DF),
                           textStyle: const TextStyle(fontSize: 16),
                           tail: true,
