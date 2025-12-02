@@ -5,7 +5,7 @@ import 'package:slice/views/pages/home_page.dart';
 import 'firebase_options.dart';
 import 'views/widget_tree.dart';
 import 'package:slice/login_page.dart';
-//import 'package:slice/firebase_msg.dart';
+import 'package:slice/firebase_msg.dart';
 import 'login_page.dart'; // make sure this file is in /lib
 import 'signup_page.dart'; // make sure this file is in /lib
 import 'firebase_options.dart';
@@ -16,6 +16,9 @@ void main() async {
       // name: "slice-32bc8",
       options: DefaultFirebaseOptions.currentPlatform,
   );
+  final firebaseMsg = FirebaseMsg();
+  await firebaseMsg.initFCM();
+
   runApp(const Slice());
 }
 
