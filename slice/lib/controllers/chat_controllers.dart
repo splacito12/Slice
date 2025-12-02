@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'package:slice/services/encryption _service.dart';
+import 'package:slice/services/encryption%20_service.dart';
 import 'package:slice/services/media_service.dart';
 import 'package:slice/services/message_service.dart';
 
