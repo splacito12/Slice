@@ -4,8 +4,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AuthService {
 
   // instance of auth
-  final FirebaseAuth _auth = FirebaseAuth.instance;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final FirebaseAuth _auth;
+  final FirebaseFirestore _firestore;
+
+  AuthService({
+    FirebaseAuth? auth,
+    FirebaseFirestore? firestore,
+  })  : _auth = auth ?? FirebaseAuth.instance,
+        _firestore = firestore ?? FirebaseFirestore.instance;
 
   // log in
   Future<UserCredential> signInWithEmailPassword(String email, password) async {
