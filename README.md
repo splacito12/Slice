@@ -45,9 +45,10 @@ After that, you will need to configure Firebase and install all of the dependenc
     flutter run
 
   If you aren’t in the correct directory, it will not work. Now, depending on whether you are using an emulator or not, you will be given two options:
-    Without emulator:
+    
+  Without emulator:
       If you are on a Windows computer, you will be prompted to either open the app on Windows or in your browser. Click the associated letter or number for your preferred choice. After that, the application will open
-    With emulator:
+  With emulator:
       Flutter will open the emulator and run the application. Depending on your internet or the device, it can take a while. 
 
   After the application is now either on your browser or your choice of emulator, the app will open, and you will see our login page, where, if you already have an existing account, you can log in. There is also a signup page. You can register an account by pressing the sign-up button and inputting your information. Once an account is created, you will get a verification email and be taken to the homepage of our app. There, you can add friends by pressing the add friend icon in the upper right corner, searching them up by their email. If they accept your friend request, you can start chatting with them immediately.
