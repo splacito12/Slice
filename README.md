@@ -12,37 +12,37 @@
 ## How to Implement
   First, you would need to obtain the HTTPS link from our GitHub. You can do this by clicking the green < > Code button and then opening or installing VSCode. From there, you will need to install the Flutter extension by going to the extension tab and searching for Flutter. After you have installed the Flutter extension, you will need to open the terminal and copy the following:
   
-  `git clone https://github.com/splacito12/Slice.git`
+    git clone https://github.com/splacito12/Slice.git
   
   Once you have, you press **ENTER** to create a local clone on your device. After that is completed, you will need to select open to open it on your current window. If you want to open it in a new window, you will need to press open in a new window.
   
   The next step in our installation process is that you either continue using your current terminal or open a new one. Either or doesn’t affect the outcome.
 You can also download a compatible emulator for your device. For example, if you are using a Windows computer, you can install an Android emulator at the following website:
 
-  ` https://developer.android.com/studio`
+    https://developer.android.com/studio
   
   There, you can follow the steps on the website below on how to set up the emulator on VSCode:
   
-  `https://medium.com/@bosctechlabs/code-of-how-to-set-up-an-emulator-for-vscode-updated-ad4365c0559b`
+    https://medium.com/@bosctechlabs/code-of-how-to-set-up-an-emulator-for-vscode-updated-ad4365c0559b
 
   Of course, this is only optional. You don’t have to have an emulator to be able to run our app, but it is recommended for a better experience. 
 
   Next, you will need to call the slice directory by doing the following command in the terminal:
   
-    `cd slice`
+    cd slice
 
   Because this project uses Firebase for authentication and encrypted messaging, anyone who clones the repository must create their own Firebase project and connect it using the FlutterFire CLI. Firebase configuration files cannot be included in the repository for security reasons, so running flutterfire configure is required to generate your own **firebase_options.dart** file before the app can run.
 After that, you will need to configure Firebase and install all of the dependencies for our app by running the following command:
   
-  `flutterfire configure`
+    flutterfire configure
 
   This links the project to a Firebase app and generates the **firebase_options.dart** file that is used by our app. And then, after that is done, you will paste the following:
 
-  `flutter pub get`
+    flutter pub get
 
   Once that is done, you can finally run the program by using the following command:
 
-  `flutter run`
+    flutter run
 
   If you aren’t in the correct directory, it will not work. Now, depending on whether you are using an emulator or not, you will be given two options:
     Without emulator:
