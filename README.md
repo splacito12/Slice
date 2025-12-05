@@ -57,7 +57,6 @@
   9. After the application is now either on your browser or your choice of emulator, the app will open, and you will see our login page, where, if you already have an existing account, you can log in. There is also a signup page. You can register an account by pressing the sign-up button and inputting your information. Once an account is created, you will get a verification email and be taken to the homepage of our app. There, you can add friends by pressing the add friend icon in the upper right corner, searching them up by their email. If they accept your friend request, you can start chatting with them immediately.
 
 
-## Use Case and Class UML diagrams
 ## UML Diagram
 <img width="727" height="492" alt="Screenshot 2025-12-04 at 7 15 31 PM" src="https://github.com/user-attachments/assets/e856f6e8-9093-4880-ba48-c377c4c3c7db" />
 
