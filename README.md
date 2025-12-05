@@ -19,41 +19,30 @@
   3. The next step in our installation process is that you either continue using your current terminal or open a new one. Either or doesn’t affect the outcome.
 
   4. You can also download a compatible emulator for your device. For example, if you are using a Windows computer, you can install an Android emulator at the following website:
-
-    https://developer.android.com/studio
-  
-  There, you can follow the steps on the website below on how to set up the emulator on VSCode:
-  
-    https://medium.com/@bosctechlabs/code-of-how-to-set-up-an-emulator-for-vscode-updated-ad4365c0559b
-
-  Of course, this is only optional. You don’t have to have an emulator to be able to run our app, but it is recommended for a better experience. 
+       `https://developer.android.com/studio`
+     - There, you can follow the steps on the website below on how to set up the emulator on VSCode:
+        `https://medium.com/@bosctechlabs/code-of-how-to-set-up-an-emulator-for-vscode-updated-ad4365c0559b`
+     - Of course, this is only optional. You don’t have to have an emulator to be able to run our app, but it is recommended for a better experience. 
 
   5. Next, you will need to call the slice directory by doing the following command in the terminal:
-  
-    cd slice
-
-  Because this project uses Firebase for authentication and encrypted messaging, anyone who clones the repository must create their own Firebase project and connect it using the FlutterFire CLI. Firebase configuration files cannot be included in the repository for security reasons, so running flutterfire configure is required to generate your own **firebase_options.dart** file before the app can run.
+        `cd slice`
+    - Because this project uses Firebase for authentication and encrypted messaging, anyone who clones the repository must create their own Firebase project and connect it using the FlutterFire CLI. Firebase configuration files cannot be included in the repository for security reasons, so running flutterfire configure is required to generate your own **firebase_options.dart** file before the app can run.
 
   6. After that, you will need to configure Firebase and install all of the dependencies for our app by running the following command:
-  
-    flutterfire configure
-
-  This links the project to a Firebase app and generates the **firebase_options.dart** file that is used by our app. And then, after that is done, you will paste the following:
+    `flutterfire configure`
+    - This links the project to a Firebase app and generates the **firebase_options.dart** file that is used by our app. And then, after that is done, you will paste the following:
 
     flutter pub get
-
+    
   7. Once that is done, you can finally run the program by using the following command:
-
+     
     flutter run
 
-  8. If you aren’t in the correct directory, it will not work. Now, depending on whether you are using an emulator or not, you will be given two options:
-
-   Without emulator:
-      If you are on a Windows computer, you will be prompted to either open the app on Windows or in your browser. Click the associated letter or number for your preferred choice. After that, the application will open
-      
-
-  With emulator:
-      Flutter will open the emulator and run the application. Depending on your internet or the device, it can take a while.
+  9. If you aren’t in the correct directory, it will not work. Now, depending on whether you are using an emulator or not, you will be given two options:
+    - Without emulator:
+        - If you are on a Windows computer, you will be prompted to either open the app on Windows or in your browser. Click the associated letter or number for your preferred choice. After that, the application will open
+    - With emulator:
+        - Flutter will open the emulator and run the application. Depending on your internet or the device, it can take a while.
       
 
   9. After the application is now either on your browser or your choice of emulator, the app will open, and you will see our login page, where, if you already have an existing account, you can log in. There is also a signup page. You can register an account by pressing the sign-up button and inputting your information. Once an account is created, you will get a verification email and be taken to the homepage of our app. There, you can add friends by pressing the add friend icon in the upper right corner, searching them up by their email. If they accept your friend request, you can start chatting with them immediately.
